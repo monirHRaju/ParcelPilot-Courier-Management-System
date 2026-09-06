@@ -1,0 +1,68 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: courier_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint API
+        run: npm run lint --workspace=apps/api
+
+      - name: Typecheck API
+        run: npm run typecheck --workspace=apps/api
+
+      - name: Lint Web
+        run: npm run lint --workspace=apps/web
+
+      - name: Typecheck Web
+        run: npm run typecheck --workspace=apps/web
+
+      - name: Run Prisma Migrations
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/courier_dev
+        run: npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
+
+      - name: Test API
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/courier_dev
+          REDIS_URL: redis://localhost:6379
+        run: npm run test --workspace=apps/api
