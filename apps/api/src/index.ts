@@ -1,13 +1,30 @@
 import express, { Request, Response } from 'express';
+import { env } from './config/env.js';
+import { prisma } from './lib/prisma.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
 
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'courier-api' });
+app.get('/health', async (_req: Request, res: Response) => {
+  try {
+    const healthCheckCount = await prisma.healthCheck.count();
+    res.json({
+      status: 'ok',
+      service: 'courier-api',
+      environment: env.NODE_ENV,
+      database: 'connected',
+      healthCheckCount,
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      service: 'courier-api',
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown database error',
+    });
+  }
 });
 
 app.get('/api/parcels/sample', (_req: Request, res: Response) => {
@@ -27,6 +44,6 @@ app.get('/api/parcels/sample', (_req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`[API Server] Running on http://localhost:${PORT}`);
+app.listen(env.PORT, () => {
+  console.log(`[API Server] Running on http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
 });
