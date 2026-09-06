@@ -17,6 +17,8 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1, 'REDIS_URL is required').url('REDIS_URL must be a valid URL'),
   JWT_ACCESS_SECRET: z.string().min(10, 'JWT_ACCESS_SECRET must be at least 10 chars'),
   JWT_REFRESH_SECRET: z.string().min(10, 'JWT_REFRESH_SECRET must be at least 10 chars'),
+  SMS_PROVIDER: z.enum(['console', 'bulksmsbd']).default('console'),
+  SMS_TOKEN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

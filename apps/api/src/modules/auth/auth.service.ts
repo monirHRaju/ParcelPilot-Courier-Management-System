@@ -103,4 +103,46 @@ export class AuthService {
       // Ignore if token is already expired or invalid on logout
     }
   }
+
+  static async sendOtp(phone: string) {
+    const rateLimitKey = `auth:otp:ratelimit:${phone}`;
+    const count = await redis.incr(rateLimitKey);
+    if (count === 1) {
+      await redis.expire(rateLimitKey, 600); // 10 minutes
+    }
+    
+    if (count > 3) {
+      throw new AppError('Too many OTP requests. Try again later.', 429, 'RATE_LIMIT_EXCEEDED');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpKey = `auth:otp:${phone}`;
+    
+    await redis.set(otpKey, otp, 'EX', 300); // 5 minutes
+
+    const { smsProvider } = await import('../../lib/sms/index.js');
+    await smsProvider.send(phone, `Your verification code is: ${otp}`);
+  }
+
+  static async verifyOtp(phone: string, code: string) {
+    const otpKey = `auth:otp:${phone}`;
+    const storedOtp = await redis.get(otpKey);
+
+    if (!storedOtp || storedOtp !== code) {
+      throw AppError.badRequest('Invalid or expired OTP', 'INVALID_OTP');
+    }
+
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) {
+      throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isPhoneVerified: true },
+    });
+
+    await redis.del(otpKey);
+  }
 }
+

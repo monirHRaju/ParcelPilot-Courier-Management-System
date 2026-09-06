@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service.js';
-import { registerSchema, loginSchema, refreshSchema, logoutSchema } from './auth.schemas.js';
+import { registerSchema, loginSchema, refreshSchema, logoutSchema, sendOtpSchema, verifyOtpSchema } from './auth.schemas.js';
 import { AppError } from '../../errors/app-error.js';
 
 export class AuthController {
@@ -78,4 +78,41 @@ export class AuthController {
       next(err);
     }
   }
+
+  static async sendOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const parsed = sendOtpSchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw AppError.badRequest('Validation failed', 'VALIDATION_ERROR', parsed.error.format());
+      }
+
+      const { phone } = parsed.data;
+      await AuthService.sendOtp(phone);
+
+      res.status(200).json({
+        message: 'OTP sent successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async verifyOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const parsed = verifyOtpSchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw AppError.badRequest('Validation failed', 'VALIDATION_ERROR', parsed.error.format());
+      }
+
+      const { phone, code } = parsed.data;
+      await AuthService.verifyOtp(phone, code);
+
+      res.status(200).json({
+        message: 'Phone verified successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
+

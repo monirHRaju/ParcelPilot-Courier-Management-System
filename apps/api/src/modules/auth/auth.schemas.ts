@@ -19,3 +19,12 @@ export const refreshSchema = z.object({
 export const logoutSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
+
+export const sendOtpSchema = z.object({
+  phone: z.string().min(5, 'Phone number is too short').max(20, 'Phone number is too long'),
+});
+
+export const verifyOtpSchema = z.object({
+  phone: z.string().min(5, 'Phone number is too short').max(20, 'Phone number is too long'),
+  code: z.string().length(6, 'OTP must be exactly 6 digits'),
+});

@@ -6,9 +6,11 @@ import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
-import { requireAuth } from './middleware/require-auth.js';
+import { authenticate } from './middleware/authenticate.js';
+import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
+import { Role } from '@prisma/client';
 
 export const createApp = (): Express => {
   const app = express();
@@ -27,10 +29,17 @@ export const createApp = (): Express => {
   // Auth routes
   app.use('/auth', authRouter);
 
-  // Protected test route
-  app.get('/api/protected', requireAuth, (req: Request, res: Response) => {
+  // Protected test routes
+  app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {
     res.json({
-      message: 'You have accessed a protected route!',
+      message: 'You have accessed a protected route available to any authenticated user!',
+      user: (req as any).user,
+    });
+  });
+
+  app.get('/api/protected/admin', authenticate, authorize(Role.SUPER_ADMIN), (req: Request, res: Response) => {
+    res.json({
+      message: 'You have accessed a protected route for SUPER_ADMIN only!',
       user: (req as any).user,
     });
   });
