@@ -5,6 +5,8 @@ import compression from 'compression';
 import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { healthRouter } from './modules/health/health.routes.js';
+import { authRouter } from './modules/auth/auth.routes.js';
+import { requireAuth } from './middleware/require-auth.js';
 import { AppError } from './errors/app-error.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
 
@@ -21,6 +23,17 @@ export const createApp = (): Express => {
 
   // Health check routes (controller -> service -> repository)
   app.use('/health', healthRouter);
+
+  // Auth routes
+  app.use('/auth', authRouter);
+
+  // Protected test route
+  app.get('/api/protected', requireAuth, (req: Request, res: Response) => {
+    res.json({
+      message: 'You have accessed a protected route!',
+      user: (req as any).user,
+    });
+  });
 
   // Sample route using shared Zod schema & types
   app.get('/api/parcels/sample', (_req: Request, res: Response) => {
