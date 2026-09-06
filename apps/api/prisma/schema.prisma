@@ -29,6 +29,24 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   merchant        Merchant?
+  rider           Rider?
+}
+
+enum VehicleType {
+  BICYCLE
+  MOTORCYCLE
+  VAN
+}
+
+model Rider {
+  id           String      @id @default(uuid())
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id])
+  vehicleType  VehicleType
+  nidNumber    String
+  coverageZone String
+  isApproved   Boolean     @default(false)
+  createdAt    DateTime    @default(now())
 }
 
 model Merchant {
