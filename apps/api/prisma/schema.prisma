@@ -11,3 +11,21 @@ model HealthCheck {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 }
+
+enum Role {
+  SUPER_ADMIN
+  HUB_MANAGER
+  RIDER
+  MERCHANT
+}
+
+model User {
+  id              String   @id @default(uuid())
+  phone           String   @unique
+  passwordHash    String
+  role            Role
+  isPhoneVerified Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
