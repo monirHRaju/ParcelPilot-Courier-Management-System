@@ -6,6 +6,7 @@ import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { merchantRouter } from './modules/merchant/merchant.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -28,6 +29,9 @@ export const createApp = (): Express => {
 
   // Auth routes
   app.use('/auth', authRouter);
+
+  // Merchant routes
+  app.use('/merchants', merchantRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {
