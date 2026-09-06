@@ -10,7 +10,10 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required').url('DATABASE_URL must be a valid URL'),
+  DATABASE_URL: z
+    .string()
+    .min(1, 'DATABASE_URL is required')
+    .url('DATABASE_URL must be a valid URL'),
   REDIS_URL: z.string().min(1, 'REDIS_URL is required').url('REDIS_URL must be a valid URL'),
 });
 
