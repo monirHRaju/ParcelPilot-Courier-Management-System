@@ -47,6 +47,7 @@ model Rider {
   coverageZone String
   isApproved   Boolean     @default(false)
   createdAt    DateTime    @default(now())
+  parcels      Parcel[]
 }
 
 model Merchant {
@@ -57,4 +58,46 @@ model Merchant {
   businessAddress   String
   contactPersonName String
   createdAt         DateTime @default(now())
+  parcels           Parcel[]
+}
+
+enum SizeTier {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum ServiceType {
+  STANDARD
+  EXPRESS
+}
+
+enum ParcelStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  AT_HUB
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  FAILED
+}
+
+model Parcel {
+  id                  String       @id @default(uuid())
+  merchantId          String
+  merchant            Merchant     @relation(fields: [merchantId], references: [id])
+  riderId             String?
+  rider               Rider?       @relation(fields: [riderId], references: [id])
+  recipientName       String
+  recipientPhone      String
+  pickupAddressText   String
+  deliveryAddressText String
+  weightGrams         Int
+  sizeTier            SizeTier
+  codAmount           Int
+  serviceType         ServiceType
+  status              ParcelStatus @default(PENDING)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 }
