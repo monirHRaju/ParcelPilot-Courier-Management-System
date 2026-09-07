@@ -120,6 +120,8 @@ model Parcel {
   codHandlingFee    Int                   @default(0)
   totalFee          Int                   @default(0)
   status            ParcelStatus          @default(PENDING)
+  destinationHubId  String?
+  destinationHub    Hub?                  @relation("DestinationHub", fields: [destinationHubId], references: [id])
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   statusHistory     ParcelStatusHistory[]
@@ -138,18 +140,30 @@ model ParcelStatusHistory {
 }
 
 model Hub {
-  id             String        @id @default(uuid())
-  name           String
+  id                 String        @id @default(uuid())
+  name               String
+  division           String
+  district           String
+  upazilaOrThana     String
+  addressLine        String
+  latitude           Float?
+  longitude          Float?
+  createdAt          DateTime      @default(now())
+  users              User[]
+  transfersFrom      HubTransfer[] @relation("FromHub")
+  transfersTo        HubTransfer[] @relation("ToHub")
+  destinationParcels Parcel[]      @relation("DestinationHub")
+  zones              Zone[]
+}
+
+model Zone {
+  id             String   @id @default(uuid())
   division       String
   district       String
-  upazilaOrThana String
-  addressLine    String
-  latitude       Float?
-  longitude      Float?
-  createdAt      DateTime      @default(now())
-  users          User[]
-  transfersFrom  HubTransfer[] @relation("FromHub")
-  transfersTo    HubTransfer[] @relation("ToHub")
+  upazilaOrThana String   @unique
+  hubId          String
+  hub            Hub      @relation(fields: [hubId], references: [id])
+  createdAt      DateTime @default(now())
 }
 
 enum HubTransferStatus {

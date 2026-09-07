@@ -11,6 +11,7 @@ import { riderRouter } from './modules/rider/rider.routes.js';
 import { parcelRouter } from './modules/parcel/parcel.routes.js';
 import { pricingRouter } from './modules/pricing/pricing.routes.js';
 import { hubRouter } from './modules/hub/hub.routes.js';
+import { zoneRouter } from './modules/zone/zone.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -48,6 +49,9 @@ export const createApp = (): Express => {
 
   // Hub routes
   app.use('/hubs', hubRouter);
+
+  // Zone routes
+  app.use('/zones', zoneRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {

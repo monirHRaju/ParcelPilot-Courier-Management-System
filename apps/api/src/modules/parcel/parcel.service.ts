@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../errors/app-error.js';
 import { SizeTier, ServiceType, Role } from '@prisma/client';
 import { pricingService } from '../pricing/pricing.service.js';
+import { zoneService } from '../zone/zone.service.js';
 
 type AddressData = {
   division: string;
@@ -44,6 +45,8 @@ export const parcelService = {
       codAmount: data.codAmount,
     });
 
+    const destinationHub = await zoneService.resolveHubForAddress({ upazilaOrThana: deliveryAddress.upazilaOrThana });
+
     const parcel = await prisma.parcel.create({
       data: {
         merchant: { connect: { id: merchant.id } },
@@ -51,6 +54,7 @@ export const parcelService = {
         baseFee: pricing.baseFee,
         codHandlingFee: pricing.codHandlingFee,
         totalFee: pricing.totalFee,
+        destinationHub: destinationHub ? { connect: { id: destinationHub.id } } : undefined,
         pickupAddress: {
           create: pickupAddress,
         },
@@ -90,6 +94,9 @@ export const parcelService = {
           codAmount: item.data.codAmount,
         });
 
+        // We can't use tx-bound zone resolution easily since it's in another service, but findUnique is safe here
+        const destinationHub = await zoneService.resolveHubForAddress({ upazilaOrThana: deliveryAddress.upazilaOrThana });
+
         const parcel = await tx.parcel.create({
           data: {
             merchant: { connect: { id: merchant.id } },
@@ -97,6 +104,7 @@ export const parcelService = {
             baseFee: pricing.baseFee,
             codHandlingFee: pricing.codHandlingFee,
             totalFee: pricing.totalFee,
+            destinationHub: destinationHub ? { connect: { id: destinationHub.id } } : undefined,
             pickupAddress: { create: pickupAddress },
             deliveryAddress: { create: deliveryAddress },
           },
