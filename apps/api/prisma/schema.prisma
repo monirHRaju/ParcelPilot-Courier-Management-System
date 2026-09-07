@@ -30,6 +30,8 @@ model User {
   updatedAt       DateTime              @updatedAt
   merchant        Merchant?
   rider           Rider?
+  hubId           String?
+  hub             Hub?                  @relation(fields: [hubId], references: [id])
   statusHistory   ParcelStatusHistory[]
 }
 
@@ -121,6 +123,7 @@ model Parcel {
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   statusHistory     ParcelStatusHistory[]
+  hubTransfers      HubTransfer[]
 }
 
 model ParcelStatusHistory {
@@ -132,4 +135,38 @@ model ParcelStatusHistory {
   changedByUser   User?        @relation(fields: [changedByUserId], references: [id])
   note            String?
   createdAt       DateTime     @default(now())
+}
+
+model Hub {
+  id             String        @id @default(uuid())
+  name           String
+  division       String
+  district       String
+  upazilaOrThana String
+  addressLine    String
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime      @default(now())
+  users          User[]
+  transfersFrom  HubTransfer[] @relation("FromHub")
+  transfersTo    HubTransfer[] @relation("ToHub")
+}
+
+enum HubTransferStatus {
+  DISPATCHED
+  ARRIVED
+}
+
+model HubTransfer {
+  id           String            @id @default(uuid())
+  parcelId     String
+  parcel       Parcel            @relation(fields: [parcelId], references: [id])
+  fromHubId    String?
+  fromHub      Hub?              @relation("FromHub", fields: [fromHubId], references: [id])
+  toHubId      String
+  toHub        Hub               @relation("ToHub", fields: [toHubId], references: [id])
+  status       HubTransferStatus
+  dispatchedAt DateTime?
+  arrivedAt    DateTime?
+  createdAt    DateTime          @default(now())
 }
