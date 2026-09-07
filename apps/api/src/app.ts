@@ -9,6 +9,7 @@ import { authRouter } from './modules/auth/auth.routes.js';
 import { merchantRouter } from './modules/merchant/merchant.routes.js';
 import { riderRouter } from './modules/rider/rider.routes.js';
 import { parcelRouter } from './modules/parcel/parcel.routes.js';
+import { pricingRouter } from './modules/pricing/pricing.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -40,6 +41,9 @@ export const createApp = (): Express => {
 
   // Parcel routes
   app.use('/parcels', parcelRouter);
+
+  // Pricing routes
+  app.use('/pricing', pricingRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {

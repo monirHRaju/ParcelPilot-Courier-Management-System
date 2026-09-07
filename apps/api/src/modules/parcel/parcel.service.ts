@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../errors/app-error.js';
 import { SizeTier, ServiceType, Role } from '@prisma/client';
+import { pricingService } from '../pricing/pricing.service.js';
 
 type AddressData = {
   division: string;
@@ -35,10 +36,21 @@ export const parcelService = {
 
     const { pickupAddress, deliveryAddress, ...parcelData } = data;
 
+    const pricing = pricingService.calculatePrice({
+      pickupDistrict: pickupAddress.district,
+      deliveryDistrict: deliveryAddress.district,
+      sizeTier: data.sizeTier,
+      serviceType: data.serviceType,
+      codAmount: data.codAmount,
+    });
+
     const parcel = await prisma.parcel.create({
       data: {
         merchant: { connect: { id: merchant.id } },
         ...parcelData,
+        baseFee: pricing.baseFee,
+        codHandlingFee: pricing.codHandlingFee,
+        totalFee: pricing.totalFee,
         pickupAddress: {
           create: pickupAddress,
         },
@@ -69,10 +81,22 @@ export const parcelService = {
     await prisma.$transaction(async (tx) => {
       for (const item of validRows) {
         const { pickupAddress, deliveryAddress, ...parcelData } = item.data;
+
+        const pricing = pricingService.calculatePrice({
+          pickupDistrict: pickupAddress.district,
+          deliveryDistrict: deliveryAddress.district,
+          sizeTier: item.data.sizeTier,
+          serviceType: item.data.serviceType,
+          codAmount: item.data.codAmount,
+        });
+
         const parcel = await tx.parcel.create({
           data: {
             merchant: { connect: { id: merchant.id } },
             ...parcelData,
+            baseFee: pricing.baseFee,
+            codHandlingFee: pricing.codHandlingFee,
+            totalFee: pricing.totalFee,
             pickupAddress: { create: pickupAddress },
             deliveryAddress: { create: deliveryAddress },
           },

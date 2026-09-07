@@ -114,6 +114,9 @@ model Parcel {
   sizeTier          SizeTier
   codAmount         Int
   serviceType       ServiceType
+  baseFee           Int                   @default(0)
+  codHandlingFee    Int                   @default(0)
+  totalFee          Int                   @default(0)
   status            ParcelStatus          @default(PENDING)
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
