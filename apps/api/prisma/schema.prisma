@@ -83,21 +83,37 @@ enum ParcelStatus {
   FAILED
 }
 
+model Address {
+  id              String   @id @default(uuid())
+  division        String
+  district        String
+  upazilaOrThana  String
+  area            String
+  addressLine     String
+  latitude        Float?
+  longitude       Float?
+  createdAt       DateTime @default(now())
+  pickupParcels   Parcel[] @relation("PickupAddress")
+  deliveryParcels Parcel[] @relation("DeliveryAddress")
+}
+
 model Parcel {
-  id                  String       @id @default(uuid())
-  merchantId          String
-  merchant            Merchant     @relation(fields: [merchantId], references: [id])
-  riderId             String?
-  rider               Rider?       @relation(fields: [riderId], references: [id])
-  recipientName       String
-  recipientPhone      String
-  pickupAddressText   String
-  deliveryAddressText String
-  weightGrams         Int
-  sizeTier            SizeTier
-  codAmount           Int
-  serviceType         ServiceType
-  status              ParcelStatus @default(PENDING)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  id                String       @id @default(uuid())
+  merchantId        String
+  merchant          Merchant     @relation(fields: [merchantId], references: [id])
+  riderId           String?
+  rider             Rider?       @relation(fields: [riderId], references: [id])
+  recipientName     String
+  recipientPhone    String
+  pickupAddressId   String
+  pickupAddress     Address      @relation("PickupAddress", fields: [pickupAddressId], references: [id])
+  deliveryAddressId String
+  deliveryAddress   Address      @relation("DeliveryAddress", fields: [deliveryAddressId], references: [id])
+  weightGrams       Int
+  sizeTier          SizeTier
+  codAmount         Int
+  serviceType       ServiceType
+  status            ParcelStatus @default(PENDING)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 }
