@@ -20,16 +20,17 @@ enum Role {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  phone           String    @unique
+  id              String                @id @default(uuid())
+  phone           String                @unique
   passwordHash    String
   role            Role
-  isPhoneVerified Boolean   @default(false)
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  isPhoneVerified Boolean               @default(false)
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
   merchant        Merchant?
   rider           Rider?
+  statusHistory   ParcelStatusHistory[]
 }
 
 enum VehicleType {
@@ -98,22 +99,34 @@ model Address {
 }
 
 model Parcel {
-  id                String       @id @default(uuid())
+  id                String                @id @default(uuid())
   merchantId        String
-  merchant          Merchant     @relation(fields: [merchantId], references: [id])
+  merchant          Merchant              @relation(fields: [merchantId], references: [id])
   riderId           String?
-  rider             Rider?       @relation(fields: [riderId], references: [id])
+  rider             Rider?                @relation(fields: [riderId], references: [id])
   recipientName     String
   recipientPhone    String
   pickupAddressId   String
-  pickupAddress     Address      @relation("PickupAddress", fields: [pickupAddressId], references: [id])
+  pickupAddress     Address               @relation("PickupAddress", fields: [pickupAddressId], references: [id])
   deliveryAddressId String
-  deliveryAddress   Address      @relation("DeliveryAddress", fields: [deliveryAddressId], references: [id])
+  deliveryAddress   Address               @relation("DeliveryAddress", fields: [deliveryAddressId], references: [id])
   weightGrams       Int
   sizeTier          SizeTier
   codAmount         Int
   serviceType       ServiceType
-  status            ParcelStatus @default(PENDING)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  status            ParcelStatus          @default(PENDING)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  statusHistory     ParcelStatusHistory[]
+}
+
+model ParcelStatusHistory {
+  id              String       @id @default(uuid())
+  parcelId        String
+  parcel          Parcel       @relation(fields: [parcelId], references: [id])
+  status          ParcelStatus
+  changedByUserId String?
+  changedByUser   User?        @relation(fields: [changedByUserId], references: [id])
+  note            String?
+  createdAt       DateTime     @default(now())
 }

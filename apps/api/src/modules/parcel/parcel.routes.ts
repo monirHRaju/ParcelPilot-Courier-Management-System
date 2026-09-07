@@ -28,3 +28,18 @@ parcelRouter.get(
   authenticate,
   parcelController.getById
 );
+
+// Transition parcel status
+parcelRouter.post(
+  '/:id/status',
+  authenticate,
+  authorize(Role.RIDER, Role.HUB_MANAGER, Role.SUPER_ADMIN),
+  parcelController.transitionStatus
+);
+
+// Get parcel status history
+parcelRouter.get(
+  '/:id/history',
+  authenticate,
+  parcelController.getHistory
+);

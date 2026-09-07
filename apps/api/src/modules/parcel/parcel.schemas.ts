@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SizeTier, ServiceType } from '@prisma/client';
+import { SizeTier, ServiceType, ParcelStatus } from '@prisma/client';
 
 export const addressSchema = z.object({
   division: z.string().min(1, 'Division is required'),
@@ -20,4 +20,11 @@ export const createParcelSchema = z.object({
   sizeTier: z.nativeEnum(SizeTier),
   codAmount: z.number().int().nonnegative('COD amount cannot be negative'),
   serviceType: z.nativeEnum(ServiceType),
+});
+
+export const transitionStatusSchema = z.object({
+  status: z.nativeEnum(ParcelStatus, {
+    errorMap: () => ({ message: 'Invalid parcel status' }),
+  }),
+  note: z.string().optional(),
 });
