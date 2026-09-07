@@ -1,10 +1,22 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { parcelController } from './parcel.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { authorize } from '../../middleware/authorize.js';
 import { Role } from '@prisma/client';
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 export const parcelRouter = Router();
+
+// Bulk create parcels via CSV
+parcelRouter.post(
+  '/bulk',
+  authenticate,
+  authorize(Role.MERCHANT),
+  upload.single('file'),
+  parcelController.bulkCreate
+);
 
 // Create new parcel
 parcelRouter.post(

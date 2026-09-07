@@ -55,6 +55,35 @@ export const parcelService = {
     return parcel;
   },
 
+  async createBulkParcels(userId: string, validRows: { originalIndex: number; data: CreateParcelData }[]) {
+    const merchant = await prisma.merchant.findUnique({
+      where: { userId },
+    });
+
+    if (!merchant) {
+      throw AppError.forbidden('Only registered merchants can create parcels', 'MERCHANT_NOT_FOUND');
+    }
+
+    const createdResults: { row: number, success: boolean, parcelId: string }[] = [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of validRows) {
+        const { pickupAddress, deliveryAddress, ...parcelData } = item.data;
+        const parcel = await tx.parcel.create({
+          data: {
+            merchant: { connect: { id: merchant.id } },
+            ...parcelData,
+            pickupAddress: { create: pickupAddress },
+            deliveryAddress: { create: deliveryAddress },
+          },
+        });
+        createdResults.push({ row: item.originalIndex, success: true, parcelId: parcel.id });
+      }
+    });
+
+    return createdResults;
+  },
+
   async getMyParcels(userId: string) {
     const merchant = await prisma.merchant.findUnique({
       where: { userId },
