@@ -55,3 +55,19 @@ parcelRouter.get(
   authenticate,
   parcelController.getHistory
 );
+
+// Assign a rider manually
+parcelRouter.post(
+  '/:id/assign',
+  authenticate,
+  authorize(Role.HUB_MANAGER),
+  parcelController.assign
+);
+
+// Auto-assign the nearest online rider
+parcelRouter.post(
+  '/:id/auto-assign',
+  authenticate,
+  authorize(Role.HUB_MANAGER),
+  parcelController.autoAssign
+);

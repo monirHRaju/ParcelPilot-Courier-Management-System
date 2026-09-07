@@ -28,3 +28,7 @@ export const transitionStatusSchema = z.object({
   }),
   note: z.string().optional(),
 });
+
+export const assignRiderSchema = z.object({
+  riderId: z.string().uuid('Invalid Rider ID'),
+});

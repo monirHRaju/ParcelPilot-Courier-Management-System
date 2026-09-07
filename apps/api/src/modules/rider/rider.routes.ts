@@ -29,3 +29,11 @@ riderRouter.patch(
   authorize(Role.SUPER_ADMIN),
   riderController.approve
 );
+
+// Update rider location
+riderRouter.post(
+  '/location',
+  authenticate,
+  authorize(Role.RIDER),
+  riderController.updateLocation
+);

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { parse } from 'csv-parse/sync';
 import { parcelService } from './parcel.service.js';
-import { createParcelSchema, transitionStatusSchema } from './parcel.schemas.js';
+import { createParcelSchema, transitionStatusSchema, assignRiderSchema } from './parcel.schemas.js';
 import { AppError } from '../../errors/app-error.js';
 
 export const parcelController = {
@@ -169,6 +169,44 @@ export const parcelController = {
       res.status(200).json({
         message: 'Parcel history retrieved successfully',
         history,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async assign(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const validationResult = assignRiderSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        throw AppError.badRequest(
+          'Validation failed',
+          'VALIDATION_ERROR',
+          validationResult.error.format()
+        );
+      }
+
+      const parcel = await parcelService.assignRider(id, validationResult.data.riderId);
+      
+      res.status(200).json({
+        message: 'Rider assigned successfully',
+        parcel,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async autoAssign(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const parcel = await parcelService.autoAssignRider(id);
+      
+      res.status(200).json({
+        message: 'Rider auto-assigned successfully',
+        parcel,
       });
     } catch (error) {
       next(error);

@@ -49,6 +49,8 @@ model Rider {
   nidNumber    String
   coverageZone String
   isApproved   Boolean     @default(false)
+  hubId        String?
+  hub          Hub?        @relation("RiderHub", fields: [hubId], references: [id])
   createdAt    DateTime    @default(now())
   parcels      Parcel[]
 }
@@ -150,6 +152,7 @@ model Hub {
   longitude          Float?
   createdAt          DateTime      @default(now())
   users              User[]
+  riders             Rider[]       @relation("RiderHub")
   transfersFrom      HubTransfer[] @relation("FromHub")
   transfersTo        HubTransfer[] @relation("ToHub")
   destinationParcels Parcel[]      @relation("DestinationHub")

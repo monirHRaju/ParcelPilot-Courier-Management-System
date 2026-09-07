@@ -222,4 +222,44 @@ export const parcelService = {
 
     return history;
   },
+
+  async assignRider(parcelId: string, riderId: string) {
+    const parcel = await prisma.parcel.findUnique({ where: { id: parcelId } });
+    if (!parcel) {
+      throw AppError.notFound('Parcel not found', 'PARCEL_NOT_FOUND');
+    }
+
+    const rider = await prisma.rider.findUnique({ where: { id: riderId } });
+    if (!rider) {
+      throw AppError.notFound('Rider not found', 'RIDER_NOT_FOUND');
+    }
+
+    return prisma.parcel.update({
+      where: { id: parcelId },
+      data: { riderId },
+    });
+  },
+
+  async autoAssignRider(parcelId: string) {
+    const parcel = await prisma.parcel.findUnique({ where: { id: parcelId } });
+    if (!parcel) {
+      throw AppError.notFound('Parcel not found', 'PARCEL_NOT_FOUND');
+    }
+
+    if (!parcel.destinationHubId) {
+      throw AppError.badRequest('Cannot auto-assign because parcel has no destination hub mapping', 'NO_DESTINATION_HUB');
+    }
+
+    const { riderService } = await import('../rider/rider.service.js');
+    const riderId = await riderService.findNearestOnlineRider(parcel.destinationHubId);
+
+    if (!riderId) {
+      throw AppError.conflict('No rider currently available', 'NO_RIDER_AVAILABLE');
+    }
+
+    return prisma.parcel.update({
+      where: { id: parcelId },
+      data: { riderId },
+    });
+  }
 };

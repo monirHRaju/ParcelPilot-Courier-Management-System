@@ -11,4 +11,10 @@ export const onboardRiderSchema = z.object({
 
 export const approveRiderSchema = z.object({
   id: z.string().uuid('Invalid Rider ID'),
+  hubId: z.string().uuid('Invalid Hub ID').optional(),
+});
+
+export const updateLocationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
 });
