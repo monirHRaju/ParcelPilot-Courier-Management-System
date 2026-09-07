@@ -3,10 +3,13 @@ import { env } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
+import { initSocket } from './lib/socket.js';
 
 const server = app.listen(env.PORT, () => {
   logger.info(`🚀 [API Server] Running on http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
 });
+
+const io = initSocket(server);
 
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);

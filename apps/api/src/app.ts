@@ -12,6 +12,7 @@ import { parcelRouter } from './modules/parcel/parcel.routes.js';
 import { pricingRouter } from './modules/pricing/pricing.routes.js';
 import { hubRouter } from './modules/hub/hub.routes.js';
 import { zoneRouter } from './modules/zone/zone.routes.js';
+import { publicRouter } from './modules/public/public.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -52,6 +53,9 @@ export const createApp = (): Express => {
 
   // Zone routes
   app.use('/zones', zoneRouter);
+
+  // Public tracking routes
+  app.use('/public', publicRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {

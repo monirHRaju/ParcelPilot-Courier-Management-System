@@ -101,6 +101,8 @@ export const riderService = {
     if (rider.hubId) {
       await redis.hset(`riders:meta:${rider.id}`, 'hubId', rider.hubId);
     }
+    
+    return rider;
   },
 
   async findNearestOnlineRider(hubId: string): Promise<string | null> {

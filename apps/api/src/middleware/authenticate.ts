@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { jwtVerify } from 'jose';
+import { jwtVerify, JWTPayload } from 'jose';
 import { env } from '../config/env.js';
 import { AppError } from '../errors/app-error.js';
 
 const accessSecret = new TextEncoder().encode(env.JWT_ACCESS_SECRET);
+
+export const verifyAccessToken = async (token: string): Promise<JWTPayload> => {
+  const { payload } = await jwtVerify(token, accessSecret);
+  return payload;
+};
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,7 +22,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       throw AppError.unauthorized('Missing or invalid token', 'UNAUTHORIZED');
     }
 
-    const { payload } = await jwtVerify(token, accessSecret);
+    const payload = await verifyAccessToken(token);
     
     // Attach payload to request
     (req as any).user = {
