@@ -21,3 +21,29 @@ merchantRouter.get(
   authorize(Role.MERCHANT),
   merchantController.getMe
 );
+
+// Update my payout method
+merchantRouter.patch(
+  '/me/payout-method',
+  authenticate,
+  authorize(Role.MERCHANT),
+  merchantController.updatePayoutMethod
+);
+
+import { payoutController } from '../payout/payout.controller.js';
+
+// Request payout
+merchantRouter.post(
+  '/me/payout',
+  authenticate,
+  authorize(Role.MERCHANT),
+  payoutController.requestPayout
+);
+
+// Get my payouts
+merchantRouter.get(
+  '/me/payouts',
+  authenticate,
+  authorize(Role.MERCHANT),
+  payoutController.getMyPayouts
+);

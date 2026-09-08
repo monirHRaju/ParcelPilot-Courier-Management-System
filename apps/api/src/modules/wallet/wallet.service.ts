@@ -74,10 +74,51 @@ export const walletService = {
     });
   },
 
+  async debitWalletTx(
+    tx: any,
+    merchantId: string,
+    type: TxType,
+    amountPaisa: number,
+    parcelId?: string | null,
+    note?: string | null,
+  ) {
+    // Ensure wallet exists
+    let wallet = await tx.merchantWallet.findUnique({ where: { merchantId } });
+    if (!wallet) {
+      wallet = await tx.merchantWallet.create({ data: { merchantId } });
+    }
+
+    const newBalance = wallet.balancePaisa - amountPaisa;
+    if (newBalance < 0) {
+      logger.warn(
+        { merchantId, currentBalance: wallet.balancePaisa, debitAmount: amountPaisa, newBalance },
+        'Merchant wallet going negative after debit',
+      );
+    }
+
+    // Decrement balance
+    const updated = await tx.merchantWallet.update({
+      where: { id: wallet.id },
+      data: { balancePaisa: { decrement: amountPaisa } },
+    });
+
+    // Create immutable ledger entry
+    const transaction = await tx.walletTransaction.create({
+      data: {
+        walletId: updated.id,
+        type,
+        amountPaisa,
+        runningBalance: updated.balancePaisa,
+        parcelId: parcelId ?? undefined,
+        note: note ?? undefined,
+      },
+    });
+
+    return transaction;
+  },
+
   /**
-   * Debits the merchant wallet within a serialized transaction.
-   * If the debit would take the balance below zero, it proceeds anyway
-   * (negative balance = merchant owes the platform) and logs a warning.
+   * Debits the merchant wallet within a new serialized transaction.
    */
   async debitWallet(
     merchantId: string,
@@ -87,39 +128,7 @@ export const walletService = {
     note?: string | null,
   ) {
     return prisma.$transaction(async (tx) => {
-      // Ensure wallet exists
-      let wallet = await tx.merchantWallet.findUnique({ where: { merchantId } });
-      if (!wallet) {
-        wallet = await tx.merchantWallet.create({ data: { merchantId } });
-      }
-
-      const newBalance = wallet.balancePaisa - amountPaisa;
-      if (newBalance < 0) {
-        logger.warn(
-          { merchantId, currentBalance: wallet.balancePaisa, debitAmount: amountPaisa, newBalance },
-          'Merchant wallet going negative after debit',
-        );
-      }
-
-      // Decrement balance
-      const updated = await tx.merchantWallet.update({
-        where: { id: wallet.id },
-        data: { balancePaisa: { decrement: amountPaisa } },
-      });
-
-      // Create immutable ledger entry
-      const transaction = await tx.walletTransaction.create({
-        data: {
-          walletId: updated.id,
-          type,
-          amountPaisa,
-          runningBalance: updated.balancePaisa,
-          parcelId: parcelId ?? undefined,
-          note: note ?? undefined,
-        },
-      });
-
-      return transaction;
+      return this.debitWalletTx(tx, merchantId, type, amountPaisa, parcelId, note);
     });
   },
 

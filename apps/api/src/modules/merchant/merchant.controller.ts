@@ -40,5 +40,27 @@ export const merchantController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
+
+  async updatePayoutMethod(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = (req as any).user;
+      const { updatePayoutMethodSchema } = await import('./merchant.schemas.js');
+      const validationResult = updatePayoutMethodSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        throw AppError.badRequest('Validation failed', 'VALIDATION_ERROR', validationResult.error.format());
+      }
+
+      const merchant = await merchantService.updatePayoutMethod(user.id, validationResult.data.payoutMethod);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Payout method updated successfully',
+        data: merchant,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

@@ -16,6 +16,7 @@ import { publicRouter } from './modules/public/public.routes.js';
 import { notificationRouter } from './modules/notification/notification.routes.js';
 import { walletRouter } from './modules/wallet/wallet.routes.js';
 import { reconciliationRouter } from './modules/reconciliation/reconciliation.routes.js';
+import { adminPayoutRouter } from './modules/payout/payout.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -68,6 +69,9 @@ export const createApp = (): Express => {
 
   // Reconciliation routes
   app.use('/reconciliations', reconciliationRouter);
+
+  // Admin Payout routes
+  app.use('/admin/payouts', adminPayoutRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {

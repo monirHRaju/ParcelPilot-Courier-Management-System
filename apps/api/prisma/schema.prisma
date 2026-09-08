@@ -69,6 +69,7 @@ model Merchant {
   createdAt         DateTime        @default(now())
   parcels           Parcel[]
   wallet            MerchantWallet?
+  payoutRequests    PayoutRequest[]
 }
 
 enum SizeTier {
@@ -299,4 +300,24 @@ model HubTransfer {
   dispatchedAt DateTime?
   arrivedAt    DateTime?
   createdAt    DateTime          @default(now())
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model PayoutRequest {
+  id            String        @id @default(uuid())
+  merchantId    String
+  merchant      Merchant      @relation(fields: [merchantId], references: [id])
+  amountPaisa   Int
+  status        PayoutStatus  @default(PENDING)
+  payoutMethod  String
+  reference     String?
+  requestedAt   DateTime      @default(now())
+  processedAt   DateTime?
+  failureReason String?
 }

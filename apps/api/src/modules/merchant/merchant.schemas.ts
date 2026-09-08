@@ -5,3 +5,7 @@ export const onboardMerchantSchema = z.object({
   businessAddress: z.string().min(1, 'Business address is required'),
   contactPersonName: z.string().min(1, 'Contact person name is required'),
 });
+
+export const updatePayoutMethodSchema = z.object({
+  payoutMethod: z.string().regex(/^(bkash|nagad|bank):.+$/, 'Payout method must start with bkash:, nagad:, or bank:'),
+});
