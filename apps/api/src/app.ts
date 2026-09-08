@@ -15,6 +15,7 @@ import { zoneRouter } from './modules/zone/zone.routes.js';
 import { publicRouter } from './modules/public/public.routes.js';
 import { notificationRouter } from './modules/notification/notification.routes.js';
 import { walletRouter } from './modules/wallet/wallet.routes.js';
+import { reconciliationRouter } from './modules/reconciliation/reconciliation.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
@@ -64,6 +65,9 @@ export const createApp = (): Express => {
 
   // Wallet routes
   app.use('/merchants/me/wallet', walletRouter);
+
+  // Reconciliation routes
+  app.use('/reconciliations', reconciliationRouter);
 
   // Protected test routes
   app.get('/api/protected/any', authenticate, (req: Request, res: Response) => {

@@ -34,6 +34,7 @@ model User {
   hub             Hub?                  @relation(fields: [hubId], references: [id])
   statusHistory   ParcelStatusHistory[]
   notifications   Notification[]        @relation("UserNotifications")
+  closedReconciliations HubReconciliation[] @relation("ClosedReconciliations")
 }
 
 enum VehicleType {
@@ -218,6 +219,38 @@ model CodCollection {
   collectedAt DateTime            @default(now())
   reconciledAt DateTime?
   note        String?
+  reconciliationItem HubReconciliationItem?
+}
+
+enum ReconciliationStatus {
+  OPEN
+  CLOSED
+}
+
+model HubReconciliation {
+  id          String                  @id @default(uuid())
+  hubId       String
+  hub         Hub                     @relation(fields: [hubId], references: [id])
+  date        DateTime                @db.Date
+  status      ReconciliationStatus    @default(OPEN)
+  closedById  String?
+  closedByUser User?                  @relation("ClosedReconciliations", fields: [closedById], references: [id])
+  closedAt    DateTime?
+  createdAt   DateTime                @default(now())
+  items       HubReconciliationItem[]
+
+  @@unique([hubId, date])
+}
+
+model HubReconciliationItem {
+  id               String            @id @default(uuid())
+  reconciliationId String
+  reconciliation   HubReconciliation @relation(fields: [reconciliationId], references: [id])
+  codCollectionId  String            @unique
+  codCollection    CodCollection     @relation(fields: [codCollectionId], references: [id])
+  confirmedAmountPaisa Int
+  isDisputed       Boolean           @default(false)
+  note             String?
 }
 
 model Hub {
@@ -236,6 +269,7 @@ model Hub {
   transfersTo        HubTransfer[] @relation("ToHub")
   destinationParcels Parcel[]      @relation("DestinationHub")
   zones              Zone[]
+  reconciliations    HubReconciliation[]
 }
 
 model Zone {

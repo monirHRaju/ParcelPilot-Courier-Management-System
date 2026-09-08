@@ -21,7 +21,45 @@ export const walletService = {
   },
 
   /**
-   * Credits the merchant wallet within a serialized transaction.
+   * Credits the merchant wallet (accepts an existing transaction client).
+   */
+  async creditWalletTx(
+    tx: any,
+    merchantId: string,
+    type: TxType,
+    amountPaisa: number,
+    parcelId?: string | null,
+    note?: string | null,
+  ) {
+    // Ensure wallet exists
+    let wallet = await tx.merchantWallet.findUnique({ where: { merchantId } });
+    if (!wallet) {
+      wallet = await tx.merchantWallet.create({ data: { merchantId } });
+    }
+
+    // Increment balance
+    const updated = await tx.merchantWallet.update({
+      where: { id: wallet.id },
+      data: { balancePaisa: { increment: amountPaisa } },
+    });
+
+    // Create immutable ledger entry
+    const transaction = await tx.walletTransaction.create({
+      data: {
+        walletId: updated.id,
+        type,
+        amountPaisa,
+        runningBalance: updated.balancePaisa,
+        parcelId: parcelId ?? undefined,
+        note: note ?? undefined,
+      },
+    });
+
+    return transaction;
+  },
+
+  /**
+   * Credits the merchant wallet within a new serialized transaction.
    * Always stores amountPaisa as a positive integer — direction is encoded in the TxType.
    */
   async creditWallet(
@@ -32,31 +70,7 @@ export const walletService = {
     note?: string | null,
   ) {
     return prisma.$transaction(async (tx) => {
-      // Ensure wallet exists
-      let wallet = await tx.merchantWallet.findUnique({ where: { merchantId } });
-      if (!wallet) {
-        wallet = await tx.merchantWallet.create({ data: { merchantId } });
-      }
-
-      // Increment balance
-      const updated = await tx.merchantWallet.update({
-        where: { id: wallet.id },
-        data: { balancePaisa: { increment: amountPaisa } },
-      });
-
-      // Create immutable ledger entry
-      const transaction = await tx.walletTransaction.create({
-        data: {
-          walletId: updated.id,
-          type,
-          amountPaisa,
-          runningBalance: updated.balancePaisa,
-          parcelId: parcelId ?? undefined,
-          note: note ?? undefined,
-        },
-      });
-
-      return transaction;
+      return this.creditWalletTx(tx, merchantId, type, amountPaisa, parcelId, note);
     });
   },
 
