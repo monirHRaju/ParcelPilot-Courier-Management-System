@@ -43,17 +43,18 @@ enum VehicleType {
 }
 
 model Rider {
-  id           String      @id @default(uuid())
-  userId       String      @unique
-  user         User        @relation(fields: [userId], references: [id])
-  vehicleType  VehicleType
-  nidNumber    String
-  coverageZone String
-  isApproved   Boolean     @default(false)
-  hubId        String?
-  hub          Hub?        @relation("RiderHub", fields: [hubId], references: [id])
-  createdAt    DateTime    @default(now())
-  parcels      Parcel[]
+  id             String          @id @default(uuid())
+  userId         String          @unique
+  user           User            @relation(fields: [userId], references: [id])
+  vehicleType    VehicleType
+  nidNumber      String
+  coverageZone   String
+  isApproved     Boolean         @default(false)
+  hubId          String?
+  hub            Hub?            @relation("RiderHub", fields: [hubId], references: [id])
+  createdAt      DateTime        @default(now())
+  parcels        Parcel[]
+  codCollections CodCollection[]
 }
 
 model Merchant {
@@ -131,6 +132,7 @@ model Parcel {
   codHandlingFee    Int                   @default(0)
   totalFee          Int                   @default(0)
   status            ParcelStatus          @default(PENDING)
+  isCodCollected    Boolean               @default(false)
   destinationHubId  String?
   destinationHub    Hub?                  @relation("DestinationHub", fields: [destinationHubId], references: [id])
   createdAt         DateTime              @default(now())
@@ -139,6 +141,7 @@ model Parcel {
   hubTransfers      HubTransfer[]
   notifications     Notification[]
   walletTransactions WalletTransaction[]
+  codCollection     CodCollection?
 }
 
 model ParcelStatusHistory {
@@ -196,6 +199,25 @@ model WalletTransaction {
   parcel         Parcel?        @relation(fields: [parcelId], references: [id])
   createdAt      DateTime       @default(now())
   // NO updatedAt — ledger entries are immutable
+}
+
+enum CodCollectionStatus {
+  COLLECTED
+  RECONCILED
+  DISPUTED
+}
+
+model CodCollection {
+  id          String              @id @default(uuid())
+  parcelId    String              @unique
+  parcel      Parcel              @relation(fields: [parcelId], references: [id])
+  riderId     String
+  rider       Rider               @relation(fields: [riderId], references: [id])
+  amountPaisa Int
+  status      CodCollectionStatus @default(COLLECTED)
+  collectedAt DateTime            @default(now())
+  reconciledAt DateTime?
+  note        String?
 }
 
 model Hub {

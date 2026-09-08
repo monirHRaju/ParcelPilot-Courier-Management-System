@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { hubController } from './hub.controller.js';
+import { codController } from '../cod/cod.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { authorize } from '../../middleware/authorize.js';
 import { Role } from '@prisma/client';
@@ -28,3 +29,12 @@ hubRouter.patch(
   authorize(Role.SUPER_ADMIN),
   hubController.assignManager
 );
+
+// Get pending COD collections for this hub
+hubRouter.get(
+  '/me/pending-cod',
+  authenticate,
+  authorize(Role.HUB_MANAGER),
+  codController.getPendingCod
+);
+

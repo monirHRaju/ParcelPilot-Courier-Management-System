@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { riderController } from './rider.controller.js';
+import { codController } from '../cod/cod.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { authorize } from '../../middleware/authorize.js';
 import { Role } from '@prisma/client';
@@ -37,3 +38,12 @@ riderRouter.post(
   authorize(Role.RIDER),
   riderController.updateLocation
 );
+
+// Get my COD collection history
+riderRouter.get(
+  '/me/cod-collections',
+  authenticate,
+  authorize(Role.RIDER),
+  codController.getMyCollections
+);
+
