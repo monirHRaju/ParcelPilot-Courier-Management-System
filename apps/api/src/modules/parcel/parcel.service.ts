@@ -255,6 +255,39 @@ export const parcelService = {
       }
     }
 
+    // Wallet credit/debit hooks (Module 5.1)
+    // Wrapped in try/catch: a wallet failure must never block the status transition
+    try {
+      const { walletService } = await import('../wallet/wallet.service.js');
+      const { TxType } = await import('@prisma/client');
+
+      if (newStatus === ParcelStatus.DELIVERED) {
+        // Credit the merchant the full delivery fee they were charged
+        await walletService.creditWallet(
+          parcel.merchantId,
+          TxType.CREDIT_DELIVERY_FEE,
+          parcel.totalFee,
+          parcel.id,
+          `Delivery fee for parcel ${parcel.id}`,
+        );
+      }
+
+      if (newStatus === ParcelStatus.RETURNED) {
+        // Charge back the delivery fee as a return penalty
+        // NOTE: charging the full totalFee here — adjust if a partial fee is more fair
+        await walletService.debitWallet(
+          parcel.merchantId,
+          TxType.DEBIT_RETURN_FEE,
+          parcel.totalFee,
+          parcel.id,
+          `Return fee for parcel ${parcel.id}`,
+        );
+      }
+    } catch (error) {
+      logger.error({ error, parcelId, newStatus }, 'Failed to update wallet for status change');
+      // Do not fail the status transition if wallet update fails
+    }
+
     return { parcel: updatedParcel, history };
   },
 

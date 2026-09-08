@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../errors/app-error.js';
+import { walletService } from '../wallet/wallet.service.js';
 
 export const merchantService = {
   async onboardMerchant(userId: string, data: { businessName: string; businessAddress: string; contactPersonName: string }) {
@@ -20,6 +21,9 @@ export const merchantService = {
         contactPersonName: data.contactPersonName,
       },
     });
+
+    // Auto-provision wallet for the new merchant
+    await walletService.getOrCreateWallet(merchant.id);
 
     return merchant;
   },

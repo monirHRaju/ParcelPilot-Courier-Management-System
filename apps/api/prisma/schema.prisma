@@ -57,14 +57,16 @@ model Rider {
 }
 
 model Merchant {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
+  id                String          @id @default(uuid())
+  userId            String          @unique
+  user              User            @relation(fields: [userId], references: [id])
   businessName      String
   businessAddress   String
   contactPersonName String
-  createdAt         DateTime @default(now())
+  payoutMethod      String?
+  createdAt         DateTime        @default(now())
   parcels           Parcel[]
+  wallet            MerchantWallet?
 }
 
 enum SizeTier {
@@ -76,6 +78,11 @@ enum SizeTier {
 enum ServiceType {
   STANDARD
   EXPRESS
+}
+
+enum PaymentType {
+  COD
+  PREPAID
 }
 
 enum ParcelStatus {
@@ -119,6 +126,7 @@ model Parcel {
   sizeTier          SizeTier
   codAmount         Int
   serviceType       ServiceType
+  paymentType       PaymentType           @default(COD)
   baseFee           Int                   @default(0)
   codHandlingFee    Int                   @default(0)
   totalFee          Int                   @default(0)
@@ -130,6 +138,7 @@ model Parcel {
   statusHistory     ParcelStatusHistory[]
   hubTransfers      HubTransfer[]
   notifications     Notification[]
+  walletTransactions WalletTransaction[]
 }
 
 model ParcelStatusHistory {
@@ -153,6 +162,40 @@ model Notification {
   parcel    Parcel?  @relation(fields: [parcelId], references: [id])
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model MerchantWallet {
+  id           String              @id @default(uuid())
+  merchantId   String              @unique
+  merchant     Merchant            @relation(fields: [merchantId], references: [id])
+  balancePaisa Int                 @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  transactions WalletTransaction[]
+}
+
+enum TxType {
+  CREDIT_DELIVERY_FEE
+  CREDIT_COD_COLLECTED
+  DEBIT_COD_HANDLING
+  DEBIT_PAYOUT
+  DEBIT_RETURN_FEE
+  DEBIT_ADJUSTMENT
+  CREDIT_ADJUSTMENT
+}
+
+model WalletTransaction {
+  id             String         @id @default(uuid())
+  walletId       String
+  wallet         MerchantWallet @relation(fields: [walletId], references: [id])
+  type           TxType
+  amountPaisa    Int
+  runningBalance Int
+  note           String?
+  parcelId       String?
+  parcel         Parcel?        @relation(fields: [parcelId], references: [id])
+  createdAt      DateTime       @default(now())
+  // NO updatedAt — ledger entries are immutable
 }
 
 model Hub {
