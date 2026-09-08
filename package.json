@@ -11,7 +11,8 @@
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "postinstall": "cd apps/api && npx prisma generate"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
