@@ -109,7 +109,7 @@ export default function TrackerClient({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <p className="text-gray-500 font-medium">Location not available yet</p>
-              <p className="text-sm text-gray-400 mt-1">The rider's location will appear here when they are on the move.</p>
+              <p className="text-sm text-gray-400 mt-1">The rider&apos;s location will appear here when they are on the move.</p>
             </div>
           ) : !isLoaded ? (
             <div className="text-gray-500">Loading Map...</div>
@@ -128,7 +128,7 @@ export default function TrackerClient({
               <Marker
                 position={{ lat: location.latitude, lng: location.longitude }}
                 icon={{
-                  url: 'https://maps.google.com/mapfiles/ms/icons/delivery.png', // Or some other icon
+                  url: 'https://maps.google.com/mapfiles/ms/icons/delivery.png',
                 }}
               />
             </GoogleMap>

@@ -7,6 +7,21 @@ import { prisma } from './prisma.js';
 import { logger } from './logger.js';
 import http from 'http';
 
+// Module-level singleton — set once by initSocket(), accessed by getIO()
+let ioInstance: Server | null = null;
+
+/**
+ * Returns the Socket.IO Server instance.
+ * Must be called after initSocket() has been invoked (i.e. after server startup).
+ * Services call this at invocation time, not import time, to avoid circular deps.
+ */
+export const getIO = (): Server => {
+  if (!ioInstance) {
+    throw new Error('Socket.IO not initialized — getIO() called before initSocket()');
+  }
+  return ioInstance;
+};
+
 export const initSocket = (server: http.Server) => {
   const pubClient = redis.duplicate();
   const subClient = redis.duplicate();
@@ -22,6 +37,9 @@ export const initSocket = (server: http.Server) => {
   });
 
   io.adapter(createAdapter(pubClient, subClient));
+
+  // Store in module-level singleton for getIO()
+  ioInstance = io;
 
   // Default Namespace (Authenticated)
   io.use(async (socket, next) => {
