@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "ParcelPilot Module 5 - Wallet & Payouts",
+    "description": "API collection to test Merchant Wallets, Payouts, and Hub COD Reconciliations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "merchantToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "payoutRequestId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Setup & Auth",
+      "item": [
+        {
+          "name": "Register Merchant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    pm.collectionVariables.set(\"merchantToken\", pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+8801700000001\",\n  \"password\": \"password123\",\n  \"role\": \"MERCHANT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login Merchant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set(\"merchantToken\", pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+8801700000001\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Onboard Merchant Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{merchantToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Test Store\",\n  \"businessAddress\": \"123 Banani, Dhaka\",\n  \"contactPersonName\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/merchants/onboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["merchants", "onboard"]
+            }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    pm.collectionVariables.set(\"adminToken\", pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+8801700000009\",\n  \"password\": \"password123\",\n  \"role\": \"SUPER_ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Wallet & Payouts (Merchant)",
+      "item": [
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{merchantToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/merchants/me/wallet",
+              "host": ["{{baseUrl}}"],
+              "path": ["merchants", "me", "wallet"]
+            }
+          }
+        },
+        {
+          "name": "Update Payout Method",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{merchantToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payoutMethod\": \"bkash:01712345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/merchants/me/payout-method",
+              "host": ["{{baseUrl}}"],
+              "path": ["merchants", "me", "payout-method"]
+            }
+          }
+        },
+        {
+          "name": "Request Payout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"payoutRequestId\", pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{merchantToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/merchants/me/payout",
+              "host": ["{{baseUrl}}"],
+              "path": ["merchants", "me", "payout"]
+            }
+          }
+        },
+        {
+          "name": "Get My Payouts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{merchantToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/merchants/me/payouts",
+              "host": ["{{baseUrl}}"],
+              "path": ["merchants", "me", "payouts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Payout Management (Admin)",
+      "item": [
+        {
+          "name": "Get All Payouts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payouts",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payouts"]
+            }
+          }
+        },
+        {
+          "name": "Update Payout Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\",\n  \"reference\": \"MANUAL-REF-999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/payouts/{{payoutRequestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payouts", "{{payoutRequestId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { NotificationBell } from './NotificationBell';
 
 export const metadata: Metadata = {
   title: 'ParcelPilot - Courier & Logistics Platform',
@@ -17,16 +18,18 @@ export default function RootLayout({
         {/* Placeholder Header */}
         <header className="navbar bg-base-100 shadow-md px-4 sm:px-8 border-b border-base-200">
           <div className="flex-1 items-center gap-2">
-            <span className="text-xl font-black tracking-tight text-primary flex items-center gap-2">
+            <a href="/" className="text-xl font-black tracking-tight text-primary flex items-center gap-2">
               <span className="badge badge-primary badge-sm font-bold">PP</span>
               ParcelPilot
-            </span>
+            </a>
             <span className="badge badge-outline badge-sm hidden sm:inline-flex">
               Courier Platform
             </span>
           </div>
-          <div className="flex-none gap-2">
-            <div className="badge badge-neutral text-xs">Module 1: Foundation</div>
+          <div className="flex-none gap-3 items-center">
+            <div className="badge badge-neutral text-xs">Module 6: Notifications</div>
+            {/* Notification bell — only rendered client-side when user is logged in */}
+            <NotificationBell />
           </div>
         </header>
 
@@ -37,7 +40,7 @@ export default function RootLayout({
         <footer className="footer footer-center p-6 bg-base-100 text-base-content border-t border-base-200">
           <aside>
             <p className="text-xs text-base-content/70">
-              ParcelPilot Courier & Logistics Platform © 2026 — Monorepo Architecture
+              ParcelPilot Courier &amp; Logistics Platform © 2026 — Monorepo Architecture
             </p>
           </aside>
         </footer>

@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
+import { createBullBoard } from '@bull-board/api';
+import { ExpressAdapter } from '@bull-board/express';
 import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { healthRouter } from './modules/health/health.routes.js';
@@ -22,6 +24,8 @@ import { authorize } from './middleware/authorize.js';
 import { AppError } from './errors/app-error.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
 import { Role } from '@prisma/client';
+import { bullBoardAdapters } from './lib/queue/queue-registry.js';
+
 
 export const createApp = (): Express => {
   const app = express();
@@ -34,7 +38,12 @@ export const createApp = (): Express => {
   app.use(express.urlencoded({ extended: true }));
   app.use(requestLogger);
 
-  // Health check routes (controller -> service -> repository)
+  // Bull Board queue monitoring dashboard — SUPER_ADMIN only
+  const serverAdapter = new ExpressAdapter();
+  serverAdapter.setBasePath('/admin/queues');
+  createBullBoard({ queues: bullBoardAdapters, serverAdapter });
+  app.use('/admin/queues', authenticate, authorize(Role.SUPER_ADMIN), serverAdapter.getRouter());
+
   app.use('/health', healthRouter);
 
   // Auth routes

@@ -3,7 +3,9 @@ import { env } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
+import { queueRedis } from './lib/queue/queue.js';
 import { initSocket } from './lib/socket.js';
+import { startWorkers, closeWorkers } from './lib/queue/workers/index.js';
 
 const server = app.listen(env.PORT, () => {
   logger.info(`🚀 [API Server] Running on http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
@@ -11,11 +13,20 @@ const server = app.listen(env.PORT, () => {
 
 const io = initSocket(server);
 
+// Start BullMQ worker pool after server is listening
+startWorkers();
+
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
 
   server.close(async () => {
     logger.info('HTTP server closed.');
+
+    try {
+      await closeWorkers();
+    } catch (err) {
+      logger.error({ err }, 'Error closing BullMQ workers');
+    }
 
     try {
       await prisma.$disconnect();
@@ -26,7 +37,8 @@ const gracefulShutdown = async (signal: string) => {
 
     try {
       redis.disconnect();
-      logger.info('Redis client disconnected.');
+      queueRedis.disconnect();
+      logger.info('Redis clients disconnected.');
     } catch (err) {
       logger.error({ err }, 'Error disconnecting Redis');
     }
@@ -42,3 +54,4 @@ const gracefulShutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+

@@ -118,11 +118,19 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpKey = `auth:otp:${phone}`;
     
+    // OTP stored synchronously — TTL must start BEFORE the HTTP response
     await redis.set(otpKey, otp, 'EX', 300); // 5 minutes
 
-    const { smsProvider } = await import('../../lib/sms/index.js');
-    await smsProvider.send(phone, `Your verification code is: ${otp}`);
+    // SMS dispatch is queued (Module 6) — response returns immediately after Redis write.
+    // The OTP is valid for its 5-minute TTL regardless of SMS delivery timing.
+    const { smsQueue } = await import('../../lib/queue/queue.js');
+    await smsQueue.add('otp-sms', {
+      phone,
+      message: `Your ParcelPilot OTP is: ${otp}. Valid for 5 minutes.`,
+      context: 'OTP',
+    });
   }
+
 
   static async verifyOtp(phone: string, code: string) {
     const otpKey = `auth:otp:${phone}`;

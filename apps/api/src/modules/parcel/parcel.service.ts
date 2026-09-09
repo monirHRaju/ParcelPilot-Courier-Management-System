@@ -1,9 +1,10 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../errors/app-error.js';
-import { SizeTier, ServiceType, Role } from '@prisma/client';
+import { SizeTier, ServiceType, Role, ParcelStatus } from '@prisma/client';
 import { pricingService } from '../pricing/pricing.service.js';
 import { zoneService } from '../zone/zone.service.js';
 import { logger } from '../../lib/logger.js';
+import { smsQueue, notificationQueue } from '../../lib/queue/queue.js';
 
 type AddressData = {
   division: string;
@@ -25,6 +26,27 @@ type CreateParcelData = {
   codAmount: number;
   serviceType: ServiceType;
 };
+
+/**
+ * Returns a human-readable SMS message for a given parcel status.
+ * Sent to the recipient's phone via the SMS_QUEUE worker.
+ */
+function smsMessageFor(status: ParcelStatus): string {
+  switch (status) {
+    case ParcelStatus.PICKED_UP:
+      return 'Your parcel has been picked up and is on its way. Track it on ParcelPilot.';
+    case ParcelStatus.OUT_FOR_DELIVERY:
+      return 'Your parcel is out for delivery today. Please be available to receive it.';
+    case ParcelStatus.DELIVERED:
+      return 'Your parcel has been delivered. Thank you for using ParcelPilot!';
+    case ParcelStatus.FAILED:
+      return 'Delivery attempt for your parcel was unsuccessful. We will retry soon.';
+    case ParcelStatus.RETURNED:
+      return 'Your parcel is being returned to the merchant. Contact them for details.';
+    default:
+      return `Your parcel status has been updated to: ${status}.`;
+  }
+}
 
 export const parcelService = {
   async createParcel(userId: string, data: CreateParcelData) {
@@ -214,7 +236,7 @@ export const parcelService = {
     const history = result[1];
 
     // Notification / Socket / SMS logic
-    const notifyStatuses: import('@prisma/client').ParcelStatus[] = [
+    const notifyStatuses: ParcelStatus[] = [
       ParcelStatus.PICKED_UP,
       ParcelStatus.OUT_FOR_DELIVERY,
       ParcelStatus.DELIVERED,
@@ -224,36 +246,39 @@ export const parcelService = {
 
     if (notifyStatuses.includes(newStatus)) {
       try {
-        // Send SMS to recipient
-        // TODO: This should be moved to a BullMQ queue later (Module 6)
-        logger.info(`[SMS to ${parcel.recipientPhone}]: Your parcel status is now ${newStatus}`);
-
-        // Create Notification for the merchant
-        await prisma.notification.create({
-          data: {
-            userId: parcel.merchant.userId,
-            type: 'PARCEL_STATUS_CHANGE',
-            message: `Parcel ${parcel.id} status changed to ${newStatus}`,
-            parcelId: parcel.id,
-          }
+        // Enqueue SMS to recipient — retryable, durable (Module 6: BullMQ replaces the sync stub)
+        await smsQueue.add('status-sms', {
+          phone: parcel.recipientPhone,
+          message: smsMessageFor(newStatus),
+          context: parcel.id,
         });
 
-        // Emit socket events
+        // Enqueue in-app notification for the merchant — creates DB row + socket push (Module 6)
+        await notificationQueue.add('status-notification', {
+          userId: parcel.merchant.userId,
+          type: 'PARCEL_STATUS_CHANGE',
+          message: `Parcel ${parcel.id} status changed to ${newStatus}`,
+          parcelId: parcel.id,
+        });
+
+        // Socket emits stay SYNCHRONOUS — fire-and-forget WebSocket pushes don't
+        // need a queue. If the user isn't connected, the emit is a no-op.
         const { getIO } = await import('../../lib/socket.js');
         const io = getIO();
         const payload = { parcelId: parcel.id, status: newStatus, timestamp: new Date().toISOString() };
-        
+
         // Notify merchant dashboard
         io.to(`user:${parcel.merchant.userId}`).emit('status:update', payload);
-        
+
         // Notify public tracking namespace
         io.of('/tracking').to(`parcel:${parcel.id}`).emit('status:update', payload);
 
       } catch (error) {
         logger.error({ error, parcelId, newStatus }, 'Failed to dispatch notifications for status change');
-        // Do not fail the transaction if notifications fail
+        // Do not fail the status transition if notification dispatch fails
       }
     }
+
 
     // Wallet credit/debit hooks (Module 5.1)
     // Wrapped in try/catch: a wallet failure must never block the status transition

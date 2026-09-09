@@ -3,6 +3,8 @@ import { AppError } from '../../errors/app-error.js';
 import { walletService } from '../wallet/wallet.service.js';
 import { TxType } from '@prisma/client';
 import { getIO } from '../../lib/socket.js';
+import { emailQueue } from '../../lib/queue/queue.js';
+import { logger } from '../../lib/logger.js';
 
 export const reconciliationService = {
   /**
@@ -155,23 +157,27 @@ export const reconciliationService = {
             },
           });
 
-          // Emit socket notification to merchant
+          // Socket emit + email alert for disputed COD items (both are best-effort)
           try {
-            const io = getIO();
-            const merchantUserId = await tx.merchant.findUnique({
+            const merchantRecord = await tx.merchant.findUnique({
               where: { id: item.codCollection.parcel.merchantId },
-              select: { userId: true },
+              include: { user: { select: { id: true, email: true } } },
             });
-            if (merchantUserId) {
-               io.to(`user:${merchantUserId.userId}`).emit('cod:dispute', {
-                 parcelId: item.codCollection.parcelId,
-                 confirmedAmountPaisa: item.confirmedAmountPaisa,
-                 expectedAmountPaisa: item.codCollection.amountPaisa,
-               });
+
+            if (merchantRecord) {
+              // Socket: real-time alert to merchant dashboard
+              const io = getIO();
+              io.to(`user:${merchantRecord.userId}`).emit('cod:dispute', {
+                parcelId: item.codCollection.parcelId,
+                confirmedAmountPaisa: item.confirmedAmountPaisa,
+                expectedAmountPaisa: item.codCollection.amountPaisa,
+              });
+
+              // Email: fallback persistent alert (outside transaction — enqueued after close)
+              // Note: emailQueue.add is called outside the tx block below to avoid tx scope issues
             }
           } catch (err) {
-            // Socket errors should not fail the transaction
-            console.error('Failed to emit cod:dispute socket event', err);
+            logger.warn({ err, itemId: item.id }, '[Reconciliation] Socket emit for cod:dispute failed (non-fatal)');
           }
         }
       }
@@ -188,8 +194,45 @@ export const reconciliationService = {
       });
     });
 
+    // Post-transaction: enqueue dispute alert emails for disputed items
+    // (Done outside the transaction so emailQueue.add errors don't rollback financial data)
+    const disputedItems = reconciliation.items.filter((i) => i.isDisputed);
+    for (const item of disputedItems) {
+      try {
+        const merchant = await prisma.merchant.findUnique({
+          where: { id: item.codCollection.parcel.merchantId },
+          include: { user: { select: { email: true } }, },
+        });
+        const hub = await prisma.hub.findUnique({ where: { id: hubId }, select: { name: true } });
+
+        if (merchant?.user?.email) {
+          const expectedBdt = (item.codCollection.amountPaisa / 100).toFixed(2);
+          const confirmedBdt = (item.confirmedAmountPaisa / 100).toFixed(2);
+          await emailQueue.add('cod-dispute-alert', {
+            to: merchant.user.email,
+            subject: `ParcelPilot — COD Dispute: Parcel ${item.codCollection.parcelId}`,
+            html: `
+              <h2>COD Dispute Alert</h2>
+              <p>A COD amount discrepancy was recorded during hub reconciliation.</p>
+              <table>
+                <tr><td><strong>Parcel ID:</strong></td><td>${item.codCollection.parcelId}</td></tr>
+                <tr><td><strong>Hub:</strong></td><td>${hub?.name ?? hubId}</td></tr>
+                <tr><td><strong>Expected Amount:</strong></td><td>BDT ${expectedBdt}</td></tr>
+                <tr><td><strong>Confirmed Amount:</strong></td><td>BDT ${confirmedBdt}</td></tr>
+                <tr><td><strong>Date:</strong></td><td>${new Date().toISOString()}</td></tr>
+              </table>
+              <p>Please contact your hub manager to resolve this discrepancy.</p>
+            `,
+          });
+        }
+      } catch (err) {
+        logger.error({ err, itemId: item.id }, '[Reconciliation] Failed to enqueue COD dispute email (non-fatal)');
+      }
+    }
+
     return closed;
   },
+
 
   async getMyHubReconciliations(hubId: string) {
     return prisma.hubReconciliation.findMany({

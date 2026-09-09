@@ -3,6 +3,7 @@ import { AppError } from '../../errors/app-error.js';
 import { walletService } from '../wallet/wallet.service.js';
 import { TxType, PayoutStatus } from '@prisma/client';
 import { logger } from '../../lib/logger.js';
+import { emailQueue } from '../../lib/queue/queue.js';
 import crypto from 'crypto';
 
 export const payoutService = {
@@ -72,8 +73,43 @@ export const payoutService = {
       },
     });
 
+    // Enqueue payout confirmation email (non-blocking, retryable via EMAIL_QUEUE)
+    // TODO Module 9: replace 'MOCK-' reference simulation with real bKash/Nagad Disbursement API call
+    try {
+      const merchantUser = await prisma.user.findUnique({
+        where: { id: merchant.userId },
+        select: { email: true },
+      });
+
+      if (merchantUser?.email) {
+        const amountBdt = (completedPayout.amountPaisa / 100).toFixed(2);
+        const processedAt = completedPayout.processedAt?.toISOString() ?? new Date().toISOString();
+        await emailQueue.add('payout-confirmation', {
+          to: merchantUser.email,
+          subject: 'ParcelPilot — Your Payout Has Been Processed',
+          html: `
+            <h2>Payout Confirmation</h2>
+            <p>Your payout request has been successfully processed.</p>
+            <table>
+              <tr><td><strong>Amount:</strong></td><td>BDT ${amountBdt}</td></tr>
+              <tr><td><strong>Method:</strong></td><td>${completedPayout.payoutMethod}</td></tr>
+              <tr><td><strong>Reference:</strong></td><td>${completedPayout.reference}</td></tr>
+              <tr><td><strong>Processed At:</strong></td><td>${processedAt}</td></tr>
+            </table>
+            <p>Thank you for using ParcelPilot.</p>
+          `,
+        });
+      } else {
+        logger.warn({ merchantId: merchant.id }, '[Payout] No email on file for merchant — payout confirmation email skipped');
+      }
+    } catch (err) {
+      // Email failure must never block a completed payout
+      logger.error({ err, payoutId: completedPayout.id }, '[Payout] Failed to enqueue payout confirmation email');
+    }
+
     return completedPayout;
   },
+
 
   async getMyPayouts(userId: string) {
     const merchant = await prisma.merchant.findUnique({ where: { userId } });

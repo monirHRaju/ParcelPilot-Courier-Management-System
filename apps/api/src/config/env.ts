@@ -19,6 +19,12 @@ export const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(10, 'JWT_REFRESH_SECRET must be at least 10 chars'),
   SMS_PROVIDER: z.enum(['console', 'bulksmsbd']).default('console'),
   SMS_TOKEN: z.string().optional(),
+  // Email configuration (leave blank to use Ethereal auto-account for local dev)
+  EMAIL_HOST: z.string().optional(),
+  EMAIL_PORT: z.coerce.number().default(587),
+  EMAIL_USER: z.string().optional(),
+  EMAIL_PASS: z.string().optional(),
+  EMAIL_FROM: z.string().default('ParcelPilot <no-reply@parcelpilot.bd>'),
 });
 
 export type Env = z.infer<typeof envSchema>;
