@@ -22,6 +22,7 @@ import { adminPayoutRouter } from './modules/payout/payout.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { authorize } from './middleware/authorize.js';
+import { globalLimiter } from './middleware/rate-limiter.js';
 import { AppError } from './errors/app-error.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
 import { Role } from '@prisma/client';
@@ -38,6 +39,9 @@ export const createApp = (): Express => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(requestLogger);
+
+  // Apply global rate limiter
+  app.use(globalLimiter);
 
   // Bull Board queue monitoring dashboard — SUPER_ADMIN only
   const serverAdapter = new ExpressAdapter();
