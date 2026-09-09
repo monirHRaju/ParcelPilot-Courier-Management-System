@@ -38,4 +38,14 @@ export class DashboardController {
       next(error);
     }
   }
+
+  static async getRiderDashboard(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user.id;
+      const stats = await DashboardService.getRiderStats(userId);
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

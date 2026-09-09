@@ -175,4 +175,62 @@ export class DashboardService {
       hubActivity,
     };
   }
+
+  static async getRiderStats(userId: string) {
+    const rider = await prisma.rider.findUnique({ where: { userId } });
+    if (!rider) {
+      throw new Error('Rider profile not found');
+    }
+
+    const assignedParcels = await prisma.parcel.count({
+      where: { riderId: rider.id, status: 'OUT_FOR_DELIVERY' },
+    });
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const deliveredToday = await prisma.parcel.count({
+      where: { 
+        riderId: rider.id, 
+        status: 'DELIVERED',
+        updatedAt: { gte: startOfDay }
+      },
+    });
+
+    const codToRemitResult = await prisma.codCollection.aggregate({
+      where: { 
+        riderId: rider.id, 
+        status: 'COLLECTED' 
+      },
+      _sum: { amountPaisa: true },
+    });
+    const codToRemit = codToRemitResult._sum.amountPaisa || 0;
+
+    const currentRoute = await prisma.parcel.findMany({
+      where: { riderId: rider.id, status: 'OUT_FOR_DELIVERY' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        recipientName: true,
+        recipientPhone: true,
+        deliveryAddress: {
+          select: {
+            addressLine: true,
+            area: true,
+            upazilaOrThana: true,
+            district: true,
+          }
+        },
+        codAmount: true,
+        status: true,
+      }
+    });
+
+    return {
+      assignedParcels,
+      deliveredToday,
+      codToRemit,
+      currentRoute,
+    };
+  }
 }

@@ -81,3 +81,12 @@ parcelRouter.post(
   codController.collectCod
 );
 
+// Rider marks parcel as delivered
+parcelRouter.post(
+  '/:id/deliver',
+  authenticate,
+  authorize(Role.RIDER),
+  upload.single('photo'),
+  parcelController.deliver
+);
+

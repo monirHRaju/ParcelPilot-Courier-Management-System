@@ -26,3 +26,10 @@ dashboardRouter.get(
   authorize(Role.HUB_MANAGER),
   DashboardController.getHubDashboard
 );
+
+dashboardRouter.get(
+  '/rider',
+  authenticate,
+  authorize(Role.RIDER),
+  DashboardController.getRiderDashboard
+);
