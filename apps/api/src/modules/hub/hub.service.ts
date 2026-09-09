@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../errors/app-error.js';
 import { Role } from '@prisma/client';
+import { redis } from '../../lib/redis.js';
 
 type CreateHubData = {
   name: string;
@@ -17,13 +18,26 @@ export const hubService = {
     const hub = await prisma.hub.create({
       data,
     });
+    
+    // Invalidate the cache whenever a new hub is created
+    await redis.del('cache:hubs:all');
+    
     return hub;
   },
 
   async getAllHubs() {
-    return prisma.hub.findMany({
+    const cachedHubs = await redis.get('cache:hubs:all');
+    if (cachedHubs) {
+      return JSON.parse(cachedHubs);
+    }
+
+    const hubs = await prisma.hub.findMany({
       orderBy: { createdAt: 'desc' },
     });
+
+    await redis.set('cache:hubs:all', JSON.stringify(hubs), 'EX', 3600);
+    
+    return hubs;
   },
 
   async assignManager(hubId: string, userId: string, adminId?: string) {
