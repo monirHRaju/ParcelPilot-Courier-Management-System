@@ -126,4 +126,53 @@ export class DashboardService {
       statusDistribution,
     };
   }
+
+  static async getHubStats(hubId: string) {
+    const parcelsAtHub = await prisma.parcel.count({
+      where: { destinationHubId: hubId, status: 'AT_HUB' },
+    });
+
+    const inboundParcels = await prisma.parcel.count({
+      where: { destinationHubId: hubId, status: 'IN_TRANSIT' },
+    });
+
+    const outboundParcels = await prisma.parcel.count({
+      where: { destinationHubId: hubId, status: 'OUT_FOR_DELIVERY' },
+    });
+
+    // Active riders: riders who have parcels currently OUT_FOR_DELIVERY from this hub
+    // Or we can just count riders whose hubId is this hub and are active, 
+    // but the prompt says "Count of riders currently assigned to parcels from this hub today."
+    // Let's count riders with at least one OUT_FOR_DELIVERY parcel from this hub.
+    const activeRidersData = await prisma.parcel.groupBy({
+      by: ['riderId'],
+      where: { 
+        destinationHubId: hubId, 
+        status: 'OUT_FOR_DELIVERY',
+        riderId: { not: null }
+      },
+    });
+    const activeRiders = activeRidersData.length;
+
+    const hubActivity = await prisma.parcel.findMany({
+      where: { destinationHubId: hubId },
+      take: 10,
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        recipientName: true,
+        status: true,
+        updatedAt: true,
+        rider: { select: { user: { select: { phone: true } } } }
+      }
+    });
+
+    return {
+      parcelsAtHub,
+      inboundParcels,
+      outboundParcels,
+      activeRiders,
+      hubActivity,
+    };
+  }
 }

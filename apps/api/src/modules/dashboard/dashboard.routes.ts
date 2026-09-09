@@ -19,3 +19,10 @@ dashboardRouter.get(
   authorize(Role.MERCHANT),
   DashboardController.getMerchantDashboard
 );
+
+dashboardRouter.get(
+  '/hub',
+  authenticate,
+  authorize(Role.HUB_MANAGER),
+  DashboardController.getHubDashboard
+);
