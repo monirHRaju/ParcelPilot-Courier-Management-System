@@ -12,9 +12,11 @@
     "@courier/shared": "*",
     "@react-google-maps/api": "^2.20.8",
     "date-fns": "^4.4.0",
+    "lucide-react": "^1.43.0",
     "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^3.10.1",
     "socket.io-client": "^4.8.3",
     "zod": "^3.24.2"
   },

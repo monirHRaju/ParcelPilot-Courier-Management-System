@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { BullMQAdapter } = require('@bull-board/api/bullMQAdapter');
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { smsQueue, notificationQueue, emailQueue } from './queue.js';
 
 /**
