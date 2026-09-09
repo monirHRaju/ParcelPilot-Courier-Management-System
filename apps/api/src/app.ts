@@ -27,6 +27,8 @@ import { AppError } from './errors/app-error.js';
 import { ParcelSchema, Parcel, createPlaceholderParcel } from '@courier/shared';
 import { Role } from '@prisma/client';
 import { bullBoardAdapters } from './lib/queue/queue-registry.js';
+import swaggerUi from 'swagger-ui-express';
+import { generateOpenAPI } from './docs/swagger.js';
 
 
 export const createApp = (): Express => {
@@ -48,6 +50,10 @@ export const createApp = (): Express => {
   serverAdapter.setBasePath('/admin/queues');
   createBullBoard({ queues: bullBoardAdapters, serverAdapter });
   app.use('/admin/queues', authenticate, authorize(Role.SUPER_ADMIN), serverAdapter.getRouter());
+
+  // Swagger UI
+  const openApiDoc = generateOpenAPI();
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
   app.use('/health', healthRouter);
 

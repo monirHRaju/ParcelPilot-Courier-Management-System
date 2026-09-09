@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@bull-board/api": "^9.9.0",
     "@bull-board/express": "^9.9.0",
     "@courier/shared": "*",
@@ -35,6 +36,7 @@
     "pino-http": "^10.5.0",
     "rate-limit-redis": "^6.0.1",
     "socket.io": "^4.8.3",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -45,6 +47,7 @@
     "@types/node": "^22.13.5",
     "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^7.2.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "eslint": "^9.21.0",
