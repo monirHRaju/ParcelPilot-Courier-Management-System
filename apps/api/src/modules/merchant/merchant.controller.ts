@@ -42,6 +42,29 @@ export const merchantController = {
     }
   },
 
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = (req as any).user;
+      
+      const { businessName, contactPersonName, businessAddress, payoutMethod } = req.body;
+      
+      const merchant = await merchantService.updateProfile(user.id, {
+        businessName,
+        contactPersonName,
+        businessAddress,
+        payoutMethod
+      });
+      
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: merchant,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async updatePayoutMethod(req: Request, res: Response, next: NextFunction) {
     try {
       const user = (req as any).user;

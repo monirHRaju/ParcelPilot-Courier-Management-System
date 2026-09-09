@@ -22,6 +22,14 @@ merchantRouter.get(
   merchantController.getMe
 );
 
+// Update my profile
+merchantRouter.patch(
+  '/me',
+  authenticate,
+  authorize(Role.MERCHANT),
+  merchantController.updateProfile
+);
+
 // Update my payout method
 merchantRouter.patch(
   '/me/payout-method',

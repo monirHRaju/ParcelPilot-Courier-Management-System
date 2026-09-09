@@ -50,6 +50,18 @@ export const merchantService = {
     return merchant;
   },
 
+  async updateProfile(userId: string, data: { businessName?: string; contactPersonName?: string; businessAddress?: string; payoutMethod?: string }) {
+    const merchant = await prisma.merchant.findUnique({ where: { userId } });
+    if (!merchant) {
+      throw AppError.notFound('Merchant profile not found', 'MERCHANT_NOT_FOUND');
+    }
+
+    return prisma.merchant.update({
+      where: { id: merchant.id },
+      data,
+    });
+  },
+
   async updatePayoutMethod(userId: string, payoutMethod: string) {
     const merchant = await prisma.merchant.findUnique({ where: { userId } });
     if (!merchant) {

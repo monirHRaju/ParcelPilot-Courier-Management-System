@@ -1,222 +1,171 @@
-'use client';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Package, Truck, Smartphone, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../lib/api-client';
-import { Parcel, ParcelSchema, createPlaceholderParcel } from '@courier/shared';
-
-interface HealthData {
-  status: string;
-  timestamp: string;
-  environment: string;
-  services: {
-    database: {
-      status: string;
-      healthCheckCount: number;
-    };
-    redis: {
-      status: string;
-    };
-  };
-}
+export const metadata: Metadata = {
+  title: 'ParcelPilot - Reliable Courier & Logistics in Bangladesh',
+  description: 'Fast, secure, and reliable nationwide delivery with next-day COD payouts. Partner with ParcelPilot today.',
+  openGraph: {
+    title: 'ParcelPilot - Courier & Logistics Platform',
+    description: 'Fast, secure, and reliable nationwide delivery with next-day COD payouts.',
+  },
+};
 
 export default function HomePage() {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [testErrorResponse, setTestErrorResponse] = useState<string | null>(null);
-
-  const [sampleParcel] = useState<Parcel>(() => createPlaceholderParcel());
-  const schemaValidation = ParcelSchema.safeParse(sampleParcel);
-
-  const fetchHealth = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiClient<HealthData>('health');
-      setHealth(data);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null
-            ? JSON.stringify(err)
-            : 'Failed to connect to API backend'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const triggerTestError = async () => {
-    setTestErrorResponse(null);
-    try {
-      await apiClient('health/test-error');
-    } catch (err) {
-      setTestErrorResponse(JSON.stringify(err, null, 2));
-    }
-  };
-
-  useEffect(() => {
-    fetchHealth();
-  }, [fetchHealth]);
-
   return (
-    <div className="container mx-auto px-4 py-10 max-w-5xl space-y-8">
-      {/* Hero Header */}
-      <div className="text-center space-y-3">
-        <div className="badge badge-primary badge-outline gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider">
-          Next.js App Router + Tailwind CSS + DaisyUI
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <div className="hero min-h-[70vh] bg-base-200" style={{ backgroundImage: 'linear-gradient(to bottom right, hsl(var(--b2)), hsl(var(--b1)))' }}>
+        <div className="hero-content text-center py-20 px-4">
+          <div className="max-w-3xl">
+            <div className="badge badge-primary badge-outline mb-6 p-3 text-sm font-bold shadow-sm">
+              <span className="animate-pulse mr-2 h-2 w-2 bg-primary rounded-full inline-block"></span>
+              Bangladesh's Fastest Growing Delivery Network
+            </div>
+            <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-base-content mb-6 leading-tight">
+              Logistics designed for <span className="text-primary block sm:inline">Modern Commerce</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-base-content/80 mb-10 max-w-2xl mx-auto">
+              Nationwide delivery, industry-leading 24-hour COD reconciliation, and a transparent API-first platform. Built for merchants who demand more.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/login" className="btn btn-primary btn-lg shadow-lg">
+                Become a Merchant
+                <ArrowRight size={20} />
+              </Link>
+              <Link href="/track" className="btn btn-outline btn-neutral btn-lg bg-base-100 shadow-md">
+                Track a Parcel
+              </Link>
+            </div>
+            
+            {/* Quick Tracking input snippet */}
+            <div className="mt-12 max-w-lg mx-auto bg-base-100 p-2 pl-4 rounded-full shadow-lg flex items-center border border-base-300">
+              <Package className="text-base-content/40 mr-2" size={24} />
+              <input 
+                type="text" 
+                placeholder="Enter your tracking ID (e.g. 12345678)" 
+                className="input input-ghost w-full focus:outline-none focus:bg-transparent"
+              />
+              <Link href="/track" className="btn btn-primary btn-sm rounded-full px-6">
+                Track
+              </Link>
+            </div>
+          </div>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-          Courier Platform <span className="text-primary">Frontend</span>
-        </h1>
-        <p className="text-base-content/70 max-w-xl mx-auto text-sm sm:text-base">
-          Connecting Next.js (<code className="text-primary">apps/web</code>) to Express (
-          <code className="text-secondary">apps/api</code>) with shared types from{' '}
-          <code className="text-accent">@courier/shared</code>.
-        </p>
       </div>
 
-      {/* Main Grid: Health & Shared Package */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Backend API Health Status Card (DaisyUI Card) */}
-        <div className="card bg-base-100 shadow-xl border border-base-200">
-          <div className="card-body">
-            <div className="flex items-center justify-between">
-              <h2 className="card-title text-lg flex items-center gap-2">
-                Backend Connection
-              </h2>
-              {loading ? (
-                <span className="loading loading-spinner loading-sm text-primary"></span>
-              ) : health?.status === 'ok' ? (
-                <span className="badge badge-success gap-1 font-semibold">
-                  <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                  status: ok
-                </span>
-              ) : (
-                <span className="badge badge-error gap-1 font-semibold">
-                  status: {health?.status || 'disconnected'}
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs text-base-content/60">
-              Live status fetched via <code className="text-primary">lib/api-client.ts</code> from{' '}
-              <code className="bg-base-200 px-1 py-0.5 rounded">GET /health</code>
+      {/* Features Section */}
+      <section className="py-24 px-4 sm:px-8 bg-base-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why choose ParcelPilot?</h2>
+            <p className="text-base-content/70 max-w-2xl mx-auto">
+              We handle the complexity of nationwide logistics so you can focus on growing your business.
             </p>
-
-            {error && (
-              <div className="alert alert-error text-xs py-2 mt-2">
-                <span>{error}</span>
-              </div>
-            )}
-
-            {health && (
-              <div className="mt-4 space-y-3">
-                <div className="stats stats-vertical sm:stats-horizontal shadow bg-base-200/50 w-full text-xs">
-                  <div className="stat py-2 px-3">
-                    <div className="stat-title text-xs">Postgres DB</div>
-                    <div className="stat-value text-sm text-success capitalize">
-                      {health.services.database.status}
-                    </div>
-                    <div className="stat-desc text-[10px]">
-                      Records: {health.services.database.healthCheckCount}
-                    </div>
-                  </div>
-
-                  <div className="stat py-2 px-3">
-                    <div className="stat-title text-xs">Redis Cache</div>
-                    <div className="stat-value text-sm text-success capitalize">
-                      {health.services.redis.status}
-                    </div>
-                    <div className="stat-desc text-[10px]">PONG verified</div>
-                  </div>
-
-                  <div className="stat py-2 px-3">
-                    <div className="stat-title text-xs">Environment</div>
-                    <div className="stat-value text-sm text-primary capitalize">
-                      {health.environment}
-                    </div>
-                    <div className="stat-desc text-[10px]">
-                      {new Date(health.timestamp).toLocaleTimeString()}
-                    </div>
-                  </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="card bg-base-200 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="bg-primary/10 w-14 h-14 rounded-box flex items-center justify-center mb-4 text-primary">
+                  <ShieldCheck size={32} />
                 </div>
+                <h3 className="card-title text-xl">Next-Day COD</h3>
+                <p className="text-base-content/70 text-sm">
+                  Get your cash-on-delivery payments reconciled and deposited within 24 hours. No more waiting.
+                </p>
               </div>
-            )}
-
-            <div className="card-actions justify-end mt-4 pt-2 border-t border-base-200">
-              <button
-                onClick={fetchHealth}
-                disabled={loading}
-                className="btn btn-primary btn-sm"
-              >
-                {loading ? 'Refreshing...' : 'Refresh Health Check'}
-              </button>
+            </div>
+            
+            <div className="card bg-base-200 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="bg-secondary/10 w-14 h-14 rounded-box flex items-center justify-center mb-4 text-secondary">
+                  <Smartphone size={32} />
+                </div>
+                <h3 className="card-title text-xl">Real-Time SMS</h3>
+                <p className="text-base-content/70 text-sm">
+                  Automated SMS updates at every milestone, keeping your customers informed and reducing support calls.
+                </p>
+              </div>
+            </div>
+            
+            <div className="card bg-base-200 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="bg-accent/10 w-14 h-14 rounded-box flex items-center justify-center mb-4 text-accent">
+                  <Truck size={32} />
+                </div>
+                <h3 className="card-title text-xl">Nationwide Network</h3>
+                <p className="text-base-content/70 text-sm">
+                  From Dhaka to the most remote Upazilas, our hub-and-spoke network guarantees secure delivery.
+                </p>
+              </div>
+            </div>
+            
+            <div className="card bg-base-200 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="bg-info/10 w-14 h-14 rounded-box flex items-center justify-center mb-4 text-info">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 className="card-title text-xl">API Integration</h3>
+                <p className="text-base-content/70 text-sm">
+                  Seamlessly connect your WooCommerce, Shopify, or custom backend directly to our dispatch system.
+                </p>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Shared Package Integration Card (DaisyUI Card) */}
-        <div className="card bg-base-100 shadow-xl border border-base-200">
-          <div className="card-body">
-            <div className="flex items-center justify-between">
-              <h2 className="card-title text-lg">Shared Package</h2>
-              <span className="badge badge-accent badge-outline font-semibold">
-                @courier/shared
-              </span>
-            </div>
-
-            <p className="text-xs text-base-content/60">
-              Cross-workspace type sharing and Zod schema runtime validation
+      {/* Pricing Teaser */}
+      <section className="py-24 px-4 sm:px-8 bg-base-200">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+          <div className="md:w-1/2">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6">Simple, transparent pricing.</h2>
+            <p className="text-lg text-base-content/80 mb-6">
+              No hidden fees, no complicated fuel surcharges. You pay a flat base rate plus a small COD handling fee.
             </p>
-
-            <div className="mt-2 space-y-2 bg-base-200/50 p-3 rounded-lg text-xs font-mono">
-              <div className="flex justify-between">
-                <span className="text-base-content/60">Tracking ID:</span>
-                <span className="text-primary font-bold">{sampleParcel.trackingNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-base-content/60">Recipient:</span>
-                <span>{sampleParcel.recipient}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-base-content/60">Status:</span>
-                <span className="badge badge-info badge-sm">{sampleParcel.status}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-base-200">
-                <span className="text-base-content/60">Zod Validation:</span>
-                <span className="badge badge-success badge-sm font-semibold">
-                  {schemaValidation.success ? '✓ Validated' : '✗ Invalid'}
-                </span>
-              </div>
-            </div>
-
-            <div className="card-actions justify-end mt-4 pt-2 border-t border-base-200">
-              <button
-                onClick={triggerTestError}
-                className="btn btn-outline btn-secondary btn-sm"
-              >
-                Test API Error Handling
-              </button>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="text-success" size={24} />
+                <span>Inside Dhaka from <strong className="text-primary text-xl">৳60</strong></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="text-success" size={24} />
+                <span>Suburbs from <strong className="text-primary text-xl">৳100</strong></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="text-success" size={24} />
+                <span>Outside Dhaka from <strong className="text-primary text-xl">৳130</strong></span>
+              </li>
+            </ul>
+            <Link href="/pricing" className="btn btn-primary btn-outline">
+              Calculate Exact Rates
+            </Link>
+          </div>
+          
+          <div className="md:w-1/2 w-full">
+            <div className="card bg-base-100 shadow-2xl p-6 sm:p-8 border border-base-300">
+              <h3 className="text-xl font-bold mb-6 text-center">Ready to scale your business?</h3>
+              <form className="space-y-4">
+                <div className="form-control">
+                  <label className="label"><span className="label-text font-semibold">Business Name</span></label>
+                  <input type="text" className="input input-bordered w-full" placeholder="Your e-commerce shop" />
+                </div>
+                <div className="form-control">
+                  <label className="label"><span className="label-text font-semibold">Phone Number</span></label>
+                  <input type="tel" className="input input-bordered w-full" placeholder="01XXXXXXXXX" />
+                </div>
+                <button type="button" className="btn btn-primary w-full mt-4">
+                  Request Merchant Account
+                </button>
+                <p className="text-xs text-center text-base-content/50 mt-4">
+                  By signing up, you agree to our Terms of Service and Privacy Policy.
+                </p>
+              </form>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Error Test Output Alert */}
-      {testErrorResponse && (
-        <div className="card bg-base-100 shadow-lg border border-secondary/30">
-          <div className="card-body py-4">
-            <h3 className="card-title text-sm text-secondary">
-              Backend AppError Response (Unified Error Format):
-            </h3>
-            <pre className="bg-base-300 p-3 rounded text-xs font-mono overflow-x-auto text-error">
-              {testErrorResponse}
-            </pre>
-          </div>
-        </div>
-      )}
+      </section>
     </div>
   );
 }

@@ -22,12 +22,14 @@ export default function RootLayout({
               <span className="badge badge-primary badge-sm font-bold">PP</span>
               ParcelPilot
             </a>
-            <span className="badge badge-outline badge-sm hidden sm:inline-flex">
-              Courier Platform
-            </span>
+            <div className="hidden md:flex ml-6 gap-4 text-sm font-medium">
+              <a href="/" className="hover:text-primary transition-colors">Home</a>
+              <a href="/track" className="hover:text-primary transition-colors">Track</a>
+              <a href="/pricing" className="hover:text-primary transition-colors">Pricing</a>
+            </div>
           </div>
           <div className="flex-none gap-3 items-center">
-            <div className="badge badge-neutral text-xs">Module 6: Notifications</div>
+            <a href="/login" className="btn btn-sm btn-ghost">Login</a>
             {/* Notification bell — only rendered client-side when user is logged in */}
             <NotificationBell />
           </div>
