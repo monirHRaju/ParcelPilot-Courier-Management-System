@@ -55,6 +55,15 @@ export const walletService = {
       },
     });
 
+    const { createAuditLog } = await import('../../lib/audit.js');
+    await createAuditLog({
+      userId: merchantId, // Best guess for actor in system-level events
+      entityType: 'WalletTransaction',
+      entityId: transaction.id,
+      action: 'CREATE',
+      changes: { type, amountPaisa, newBalance: updated.balancePaisa }
+    });
+
     return transaction;
   },
 
@@ -112,6 +121,15 @@ export const walletService = {
         parcelId: parcelId ?? undefined,
         note: note ?? undefined,
       },
+    });
+
+    const { createAuditLog } = await import('../../lib/audit.js');
+    await createAuditLog({
+      userId: merchantId, 
+      entityType: 'WalletTransaction',
+      entityId: transaction.id,
+      action: 'CREATE',
+      changes: { type, amountPaisa, newBalance: updated.balancePaisa }
     });
 
     return transaction;

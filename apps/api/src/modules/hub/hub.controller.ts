@@ -53,7 +53,8 @@ export const hubController = {
         );
       }
 
-      const updatedUser = await hubService.assignManager(id, validationResult.data.userId);
+      const adminUser = (req as any).user;
+      const updatedUser = await hubService.assignManager(id, validationResult.data.userId, adminUser?.id);
 
       res.status(200).json({
         message: 'Manager assigned successfully',

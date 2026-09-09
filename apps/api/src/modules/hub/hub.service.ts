@@ -26,7 +26,7 @@ export const hubService = {
     });
   },
 
-  async assignManager(hubId: string, userId: string) {
+  async assignManager(hubId: string, userId: string, adminId?: string) {
     const hub = await prisma.hub.findUnique({ where: { id: hubId } });
     if (!hub) {
       throw AppError.notFound('Hub not found', 'HUB_NOT_FOUND');
@@ -51,6 +51,17 @@ export const hubService = {
         hubId: true,
       }
     });
+
+    if (adminId) {
+      const { createAuditLog } = await import('../../lib/audit.js');
+      await createAuditLog({
+        userId: adminId,
+        entityType: 'User',
+        entityId: userId,
+        action: 'UPDATE',
+        changes: { hubId: hub.id }
+      });
+    }
 
     return updatedUser;
   },

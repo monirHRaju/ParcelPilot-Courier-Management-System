@@ -36,6 +36,7 @@ model User {
   statusHistory   ParcelStatusHistory[]
   notifications   Notification[]        @relation("UserNotifications")
   closedReconciliations HubReconciliation[] @relation("ClosedReconciliations")
+  auditLogs       AuditLog[]
 }
 
 enum VehicleType {
@@ -322,4 +323,15 @@ model PayoutRequest {
   requestedAt   DateTime      @default(now())
   processedAt   DateTime?
   failureReason String?
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  action     String   // CREATE, UPDATE, DELETE
+  changes    Json?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
 }
