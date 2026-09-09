@@ -57,4 +57,73 @@ export class DashboardService {
       volumeTrends,
     };
   }
+
+  static async getMerchantStats(userId: string) {
+    const merchant = await prisma.merchant.findUnique({
+      where: { userId },
+      include: { wallet: true }
+    });
+
+    if (!merchant) {
+      throw new Error('Merchant profile not found');
+    }
+
+    const merchantId = merchant.id;
+    const walletBalance = merchant.wallet?.balancePaisa || 0;
+
+    const pendingPayoutsResult = await prisma.payoutRequest.aggregate({
+      where: { merchantId, status: 'PENDING' },
+      _sum: { amountPaisa: true },
+    });
+    const pendingPayouts = pendingPayoutsResult._sum.amountPaisa || 0;
+
+    const totalParcels = await prisma.parcel.count({
+      where: { merchantId },
+    });
+
+    const deliveredParcels = await prisma.parcel.count({
+      where: { merchantId, status: 'DELIVERED' },
+    });
+
+    const returnedParcels = await prisma.parcel.count({
+      where: { merchantId, status: 'RETURNED' },
+    });
+    
+    const returnRate = totalParcels > 0 
+      ? Number(((returnedParcels / totalParcels) * 100).toFixed(2)) 
+      : 0;
+
+    const recentParcels = await prisma.parcel.findMany({
+      where: { merchantId },
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        recipientName: true,
+        status: true,
+        codAmount: true,
+      }
+    });
+
+    const statusGroups = await prisma.parcel.groupBy({
+      by: ['status'],
+      where: { merchantId },
+      _count: true,
+    });
+    
+    const statusDistribution = statusGroups.map(g => ({
+      status: g.status,
+      count: g._count
+    }));
+
+    return {
+      walletBalance,
+      pendingPayouts,
+      totalParcels,
+      deliveredParcels,
+      returnRate,
+      recentParcels,
+      statusDistribution,
+    };
+  }
 }

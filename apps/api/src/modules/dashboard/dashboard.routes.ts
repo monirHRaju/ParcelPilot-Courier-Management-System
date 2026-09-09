@@ -12,3 +12,10 @@ dashboardRouter.get(
   authorize(Role.SUPER_ADMIN),
   DashboardController.getAdminDashboard
 );
+
+dashboardRouter.get(
+  '/merchant',
+  authenticate,
+  authorize(Role.MERCHANT),
+  DashboardController.getMerchantDashboard
+);

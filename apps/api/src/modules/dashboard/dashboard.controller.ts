@@ -10,4 +10,14 @@ export class DashboardController {
       next(error);
     }
   }
+
+  static async getMerchantDashboard(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user.id;
+      const stats = await DashboardService.getMerchantStats(userId);
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
