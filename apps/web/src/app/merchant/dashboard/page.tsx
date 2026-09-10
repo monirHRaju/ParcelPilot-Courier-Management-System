@@ -82,11 +82,10 @@ export default function MerchantDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">Merchant Dashboard</h1>
         <div className="flex gap-2">
-          <Link href="/merchant/parcels/bulk" className="btn btn-outline btn-secondary">
-            <Upload size={18} />
-            Bulk Upload CSV
+          <Link href="/merchant/parcels" className="btn btn-outline">
+            View All Parcels
           </Link>
-          <Link href="/merchant/parcels/create" className="btn btn-primary">
+          <Link href="/merchant/parcels/new" className="btn btn-primary">
             <Plus size={18} />
             Create Parcel
           </Link>

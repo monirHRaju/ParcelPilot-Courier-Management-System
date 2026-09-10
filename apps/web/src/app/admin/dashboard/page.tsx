@@ -75,11 +75,18 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="p-4 sm:p-8 space-y-6">
+      <h1 className="text-3xl font-bold">Admin Overview</h1>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <a href="/admin/hubs" className="btn btn-outline btn-primary">Manage Hubs</a>
+        <a href="/admin/riders" className="btn btn-outline btn-primary">Approve Riders</a>
+        <a href="/admin/payouts" className="btn btn-outline btn-primary">Process Payouts</a>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat bg-base-100 shadow rounded-box">
           <div className="stat-figure text-primary">
             <Package size={32} />

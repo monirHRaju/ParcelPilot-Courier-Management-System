@@ -42,6 +42,18 @@ export const riderController = {
     }
   },
 
+  async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const riders = await riderService.getAllRiders();
+      res.status(200).json({
+        message: 'Riders retrieved successfully',
+        riders,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async approve(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

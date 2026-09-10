@@ -7,6 +7,14 @@ import { Role } from '@prisma/client';
 
 export const riderRouter = Router();
 
+// Get all riders (Admin only)
+riderRouter.get(
+  '/',
+  authenticate,
+  authorize(Role.SUPER_ADMIN),
+  riderController.getAll
+);
+
 // Onboard new rider profile
 riderRouter.post(
   '/onboard',

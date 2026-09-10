@@ -48,6 +48,20 @@ export const riderService = {
     return rider;
   },
 
+  async getAllRiders() {
+    return prisma.rider.findMany({
+      include: {
+        user: {
+          select: { phone: true, isActive: true }
+        },
+        hub: {
+          select: { name: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
   async approveRider(riderId: string, hubId?: string) {
     const rider = await prisma.rider.findUnique({
       where: { id: riderId }
