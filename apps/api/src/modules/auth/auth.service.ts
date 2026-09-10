@@ -60,8 +60,12 @@ export class AuthService {
       .setExpirationTime('7d')
       .sign(refreshSecret);
 
-    // Store in redis for revocation (expires in 7 days = 604800 seconds)
-    await redis.set(`auth:refresh:${jti}`, userId, 'EX', 7 * 24 * 60 * 60);
+    try {
+      // Store in redis for revocation (expires in 7 days = 604800 seconds)
+      await redis.set(`auth:refresh:${jti}`, userId, 'EX', 7 * 24 * 60 * 60);
+    } catch (error) {
+      throw AppError.internal('Failed to connect to Redis for session storage. Please ensure Redis is running.', 'REDIS_CONNECTION_FAILED');
+    }
 
     return { accessToken, refreshToken };
   }

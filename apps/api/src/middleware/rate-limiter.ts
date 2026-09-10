@@ -8,6 +8,7 @@ export const globalLimiter = rateLimit({
   max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   message: 'Too many requests from this IP, please try again after 15 minutes.',
   store: new RedisStore({
     // @ts-expect-error - Known typing mismatch between ioredis and rate-limit-redis
@@ -22,6 +23,7 @@ export const authLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   message: 'Too many login or registration attempts. Please try again after 15 minutes.',
   store: new RedisStore({
     // @ts-expect-error
@@ -36,6 +38,7 @@ export const publicApiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   message: 'Too many requests to public endpoints, please try again after 15 minutes.',
   store: new RedisStore({
     // @ts-expect-error
