@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Package, Search, Filter, Plus, ArrowRight } from 'lucide-react';
-import { apiClient } from '../../../../lib/api-client';
+import { apiClient } from '../../../lib/api-client';
 import { format } from 'date-fns';
 
 export default function MerchantParcelsPage() {

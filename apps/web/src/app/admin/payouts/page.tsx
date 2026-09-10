@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreditCard, CheckCircle } from 'lucide-react';
-import { apiClient } from '../../../../lib/api-client';
+import { apiClient } from '../../../lib/api-client';
 import { format } from 'date-fns';
 
 export default function AdminPayoutsPage() {

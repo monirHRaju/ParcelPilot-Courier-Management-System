@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Plus, MapPin } from 'lucide-react';
-import { apiClient } from '../../../../lib/api-client';
+import { apiClient } from '../../../lib/api-client';
 import { format } from 'date-fns';
 
 export default function AdminHubsPage() {
