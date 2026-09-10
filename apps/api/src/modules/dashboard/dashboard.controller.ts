@@ -29,7 +29,14 @@ export class DashboardController {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       
       if (!user?.hubId) {
-        throw new Error('Hub Manager is not assigned to any hub');
+        res.json({
+          parcelsAtHub: 0,
+          inboundParcels: 0,
+          outboundParcels: 0,
+          activeRiders: 0,
+          hubActivity: [],
+        });
+        return;
       }
 
       const stats = await DashboardService.getHubStats(user.hubId);

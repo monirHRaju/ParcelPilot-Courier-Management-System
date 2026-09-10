@@ -65,7 +65,16 @@ export class DashboardService {
     });
 
     if (!merchant) {
-      throw new Error('Merchant profile not found');
+      return {
+        walletBalance: 0,
+        pendingPayouts: 0,
+        totalParcels: 0,
+        deliveredParcels: 0,
+        returnRate: 0,
+        recentParcels: [],
+        statusDistribution: [],
+        volumeTrends: [],
+      };
     }
 
     const merchantId = merchant.id;
@@ -179,7 +188,12 @@ export class DashboardService {
   static async getRiderStats(userId: string) {
     const rider = await prisma.rider.findUnique({ where: { userId } });
     if (!rider) {
-      throw new Error('Rider profile not found');
+      return {
+        assignedParcels: 0,
+        deliveredToday: 0,
+        codToRemit: 0,
+        currentRoute: [],
+      };
     }
 
     const assignedParcels = await prisma.parcel.count({
