@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { NotificationBell } from './NotificationBell';
+import { HeaderAuth } from './HeaderAuth';
 
 export const metadata: Metadata = {
   title: 'ParcelPilot - Courier & Logistics Platform',
@@ -29,7 +30,7 @@ export default function RootLayout({
             </div>
           </div>
           <div className="flex-none gap-3 items-center">
-            <a href="/login" className="btn btn-sm btn-ghost">Login</a>
+            <HeaderAuth />
             {/* Notification bell — only rendered client-side when user is logged in */}
             <NotificationBell />
           </div>
