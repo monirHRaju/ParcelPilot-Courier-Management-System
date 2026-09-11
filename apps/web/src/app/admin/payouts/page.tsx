@@ -20,10 +20,10 @@ export default function AdminPayoutsPage() {
       return;
     }
     try {
-      const response = await apiClient<{ payouts: any[] }>('admin/payouts', {
+      const response = await apiClient<{ success: boolean; data: any[] }>('admin/payouts', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setRequests(response.payouts);
+      setRequests(response.data || []);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to load payout requests');
