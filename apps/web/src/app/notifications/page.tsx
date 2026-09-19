@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, ApiError } from '../../lib/api-client';
+import { apiClient, ApiError } from '@/lib/api-client';
 
 interface Notification {
   id: string;
