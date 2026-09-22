@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
+  BarChart, Bar, ResponsiveContainer,
+  AreaChart, Area
 } from 'recharts';
 import { 
   PackagePlus, Truck, MapPin, Wallet, List, HeadphonesIcon,
-  Archive, CreditCard, FileUp, FileDown, BarChart2, Edit3
+  Archive, CreditCard, FileUp, FileDown, BarChart2, Edit3, ArrowUpRight
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface MerchantStats {
   walletBalance: number;
@@ -23,8 +26,8 @@ interface MerchantStats {
   statusDistribution: Array<{ status: string; count: number; }>;
 }
 
-const dummyPerformanceData = Array.from({length: 12}, (_, i) => ({
-  name: `Day ${i+1}`,
+const dummyPerformanceData = Array.from({ length: 12 }, (_, i) => ({
+  name: `Day ${i + 1}`,
   uv: Math.floor(Math.random() * 4000) + 1000,
 }));
 
@@ -36,14 +39,9 @@ export default function MerchantDashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        // router.push('/login'); // commenting out for demo if backend isn't ready
-        // return;
-      }
       try {
-        // fallback to dummy data for UI display if backend fails
         const data = await apiClient<MerchantStats>('dashboard/merchant', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
         }).catch(() => ({
           walletBalance: 1500000,
           pendingPayouts: 25000,
@@ -66,44 +64,61 @@ export default function MerchantDashboardPage() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
       
       {/* Top Status Badges */}
-      <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-        <div className="badge badge-lg py-4 px-6 border-warning text-warning bg-warning/10 font-semibold gap-2">
-          Delivery Processing: <span className="bg-warning text-warning-content px-2 rounded">0</span>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
+          <span>Delivery Processing:</span>
+          <Badge variant="outline" className="bg-amber-500 text-white border-none px-2 py-0.5 text-xs font-bold">0</Badge>
         </div>
-        <div className="badge badge-lg py-4 px-6 border-success text-success bg-success/10 font-semibold gap-2">
-          COD Processing: <span className="bg-success text-success-content px-2 rounded">0</span>
+        <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+          <span>COD Processing:</span>
+          <Badge variant="outline" className="bg-emerald-500 text-white border-none px-2 py-0.5 text-xs font-bold">0</Badge>
         </div>
-        <div className="badge badge-lg py-4 px-6 border-error text-error bg-error/10 font-semibold gap-2">
-          Return Requests: <span className="bg-error text-error-content px-2 rounded">0</span>
+        <div className="flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-5 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-400">
+          <span>Return Requests:</span>
+          <Badge variant="outline" className="bg-rose-500 text-white border-none px-2 py-0.5 text-xs font-bold">0</Badge>
         </div>
       </div>
 
       {/* Main Action Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { name: 'Add Parcel', icon: PackagePlus, color: 'text-emerald-500', href: '/merchant/parcels/new' },
-          { name: 'Pickup Request', icon: Truck, color: 'text-orange-500', href: '#' },
-          { name: 'Pick n Drop', icon: MapPin, color: 'text-red-500', href: '#' },
-          { name: 'Payment Request', icon: Wallet, color: 'text-blue-500', href: '#' },
-          { name: 'Latest Entries', icon: List, color: 'text-emerald-500', href: '#' },
-          { name: 'Support', icon: HeadphonesIcon, color: 'text-cyan-500', href: '#' },
+          { name: 'Add Parcel', icon: PackagePlus, color: 'text-emerald-500 bg-emerald-500/10', href: '/merchant/parcels/new' },
+          { name: 'Pickup Request', icon: Truck, color: 'text-amber-500 bg-amber-500/10', href: '/merchant/pickup-requests' },
+          { name: 'Pick n Drop', icon: MapPin, color: 'text-rose-500 bg-rose-500/10', href: '/merchant/tracking' },
+          { name: 'Payment Request', icon: Wallet, color: 'text-blue-500 bg-blue-500/10', href: '/merchant/wallet' },
+          { name: 'Latest Entries', icon: List, color: 'text-emerald-500 bg-emerald-500/10', href: '/merchant/parcels' },
+          { name: 'Support', icon: HeadphonesIcon, color: 'text-cyan-500 bg-cyan-500/10', href: '/merchant/support' },
         ].map((item) => (
-          <Link href={item.href} key={item.name} className="bg-base-100 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm hover:shadow-md transition-shadow text-center cursor-pointer border border-base-200">
-            <div className={`p-3 rounded-xl bg-base-200/50 ${item.color}`}>
-              <item.icon size={28} />
-            </div>
-            <span className="font-semibold text-sm">{item.name}</span>
+          <Link href={item.href} key={item.name}>
+            <Card className="h-full hover:shadow-md transition-all hover:border-primary/40 cursor-pointer border-border/80">
+              <CardContent className="p-6 flex flex-col items-center justify-center gap-3 text-center">
+                <div className={`p-3.5 rounded-2xl ${item.color}`}>
+                  <item.icon size={26} />
+                </div>
+                <span className="font-semibold text-sm tracking-tight text-foreground">{item.name}</span>
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>
 
       {/* Secondary Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          'Consignments', 'Payments', 'Bulk Import', 'Export', 'Stats', 'Amount Change'
-        ].map((name) => (
-          <Link href="/merchant/parcels" key={name} className="bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400 font-medium rounded-xl py-3 text-center text-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors">
-            {name}
+          { name: 'Consignments', href: '/merchant/parcels' },
+          { name: 'Payments', href: '/merchant/wallet' },
+          { name: 'Bulk Import', href: '/merchant/bulk-print' },
+          { name: 'Export', href: '/merchant/parcels' },
+          { name: 'Stats', href: '/merchant/dashboard' },
+          { name: 'Amount Change', href: '/merchant/parcels' },
+        ].map((action) => (
+          <Link href={action.href} key={action.name}>
+            <Button 
+              variant="outline" 
+              className="w-full h-11 bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 font-medium rounded-xl text-xs sm:text-sm"
+            >
+              {action.name}
+            </Button>
           </Link>
         ))}
       </div>
@@ -111,66 +126,92 @@ export default function MerchantDashboardPage() {
       {/* Filters Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          'Pending Parcel', "Today's Cancelled", 'Latest Return', 'Cancellation Requests'
-        ].map((name) => (
-          <div key={name} className="bg-base-100 border border-base-200 rounded-xl py-4 text-center font-semibold text-sm shadow-sm cursor-pointer hover:border-emerald-200">
-            {name}
-          </div>
+          { label: 'Pending Parcel', count: 0, href: '/merchant/parcels' },
+          { label: "Today's Cancelled", count: 0, href: '/merchant/parcels' },
+          { label: 'Latest Return', count: 0, href: '/merchant/parcels' },
+          { label: 'Cancellation Requests', count: 0, href: '/merchant/parcels' },
+        ].map((item) => (
+          <Link href={item.href} key={item.label}>
+            <Card className="hover:border-primary/40 transition-colors border-border/80 cursor-pointer">
+              <CardContent className="p-4 flex items-center justify-between">
+                <span className="font-semibold text-sm text-foreground">{item.label}</span>
+                <Badge variant="secondary" className="font-mono text-xs">{item.count}</Badge>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
-      {/* Promo Banner Placeholder */}
-      <div className="bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300 rounded-xl p-3 flex justify-between items-center text-sm font-medium">
-        <div className="flex items-center gap-2">
-          <span className="bg-pink-500 text-white px-2 py-1 rounded text-xs font-bold tracking-widest">PIXELAX</span>
-          প্যাকেজিং পলি, কার্টুন স্কচটেপসহ যেকোনো প্যাকেজিং সাপোর্টের জন্য এখানে ক্লিক করুন
+      {/* Promo Banner */}
+      <div className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-primary/15 border border-primary/20 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm">
+        <div className="flex items-center gap-3">
+          <Badge className="bg-primary text-primary-foreground font-bold tracking-wider uppercase text-xs">
+            ParcelPilot AI
+          </Badge>
+          <span className="font-medium text-foreground">
+            Smart routing & instant parcel address validation is now active on your merchant portal.
+          </span>
         </div>
-        <div className="flex -space-x-2">
-          <div className="w-8 h-8 rounded bg-orange-400 border-2 border-base-100"></div>
-          <div className="w-8 h-8 rounded bg-yellow-400 border-2 border-base-100"></div>
-          <div className="w-8 h-8 rounded bg-blue-400 border-2 border-base-100"></div>
-        </div>
+        <Link href="/merchant/parcels/new">
+          <Button size="sm" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-1 text-xs">
+            Try Now <ArrowUpRight size={14} />
+          </Button>
+        </Link>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-200">
-          <div className="flex justify-between items-start mb-6">
-            <h3 className="text-lg font-bold">Delivery Performance</h3>
-            <button className="btn btn-sm bg-emerald-500 hover:bg-emerald-600 text-white border-none">View Graph</button>
-          </div>
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dummyPerformanceData}>
-                <Bar dataKey="uv" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border/80 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-base font-bold text-foreground">Delivery Performance</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">Last 12 days success trajectory</p>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs text-primary border-primary/30 hover:bg-primary/10">
+              View Graph
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="h-52 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dummyPerformanceData}>
+                  <Bar dataKey="uv" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-base-100 p-6 rounded-2xl shadow-sm border border-base-200">
-          <div className="flex justify-between items-start mb-6">
-            <h3 className="text-lg font-bold">Parcel Summary</h3>
-            <button className="btn btn-sm bg-emerald-500 hover:bg-emerald-600 text-white border-none">View Summary</button>
-          </div>
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dummyPerformanceData}>
-                <defs>
-                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="uv" stroke="#10b981" fillOpacity={1} fill="url(#colorUv)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Card className="border-border/80 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-base font-bold text-foreground">Parcel Summary</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">Volume & dispatch trend</p>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs text-primary border-primary/30 hover:bg-primary/10">
+              View Summary
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="h-52 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dummyPerformanceData}>
+                  <defs>
+                    <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="uv" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorUv)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="text-center text-xs text-base-content/50 py-4">
-        © 2026 SteadFast. All rights reserved
+      <div className="text-center text-xs text-muted-foreground py-4 border-t border-border">
+        © 2026 ParcelPilot. All rights reserved
       </div>
     </div>
   );

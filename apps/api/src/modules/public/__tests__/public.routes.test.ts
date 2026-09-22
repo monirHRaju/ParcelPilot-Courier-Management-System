@@ -46,7 +46,7 @@ describe('Public Tracking Endpoint - GET /public/parcels/:id/track', () => {
   });
 
   it('should return 404 if parcel ID does not exist', async () => {
-    (prisma.parcel.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.parcel.findUnique as any).mockResolvedValue(null);
 
     const response = await request(app).get('/public/parcels/NON_EXISTENT/track');
     
@@ -71,7 +71,7 @@ describe('Public Tracking Endpoint - GET /public/parcels/:id/track', () => {
       }
     };
 
-    (prisma.parcel.findUnique as jest.Mock).mockResolvedValue(mockParcel);
+    (prisma.parcel.findUnique as any).mockResolvedValue(mockParcel);
 
     const response = await request(app).get('/public/parcels/PARCEL_123/track');
     

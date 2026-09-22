@@ -9,15 +9,25 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.8.0",
     "@courier/shared": "*",
     "@react-google-maps/api": "^2.20.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cn": "^0.3.0",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.43.0",
     "next": "^15.1.7",
+    "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.6.1",
     "recharts": "^3.10.1",
+    "shadcn": "^4.21.0",
     "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.4.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

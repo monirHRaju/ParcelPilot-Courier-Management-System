@@ -1,5 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { Toaster } from 'react-hot-toast';
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'ParcelPilot - Courier & Logistics Platform',
@@ -12,9 +18,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen flex flex-col bg-base-300 text-base-content antialiased">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
