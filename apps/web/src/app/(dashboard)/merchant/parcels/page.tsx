@@ -231,9 +231,9 @@ export default function MerchantParcelsPage() {
                       {getStatusBadge(parcel.status)}
                     </TableCell>
                     <TableCell className="text-right pr-6">
-                      <Link href={`/track/${parcel.id}`} target="_blank">
+                      <Link href={`/merchant/parcels/${parcel.id}`}>
                         <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary hover:bg-primary/10 gap-1 px-2.5">
-                          Track <ExternalLink size={12} />
+                          View Details <ArrowUpRight size={12} />
                         </Button>
                       </Link>
                     </TableCell>
