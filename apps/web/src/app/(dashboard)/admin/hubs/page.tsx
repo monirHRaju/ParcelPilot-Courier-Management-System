@@ -2,9 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Plus, MapPin } from 'lucide-react';
+import { Building2, Plus, MapPin, Search } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+// Bangladesh Divisions & Districts data
+const bdData: Record<string, string[]> = {
+  'Dhaka': ['Dhaka', 'Faridpur', 'Gazipur', 'Gopalganj', 'Kishoreganj', 'Madaripur', 'Manikganj', 'Munshiganj', 'Narayanganj', 'Narsingdi', 'Rajbari', 'Shariatpur', 'Tangail'],
+  'Chattogram': ['Bandarban', 'Brahmanbaria', 'Chandpur', 'Chattogram', 'Comilla', 'Cox\'s Bazar', 'Feni', 'Khagrachhari', 'Lakshmipur', 'Noakhali', 'Rangamati'],
+  'Rajshahi': ['Bogura', 'Joypurhat', 'Naogaon', 'Natore', 'Chapainawabganj', 'Pabna', 'Rajshahi', 'Sirajganj'],
+  'Khulna': ['Bagerhat', 'Chuadanga', 'Jashore', 'Jhenaidah', 'Khulna', 'Kushtia', 'Magura', 'Meherpur', 'Narail', 'Satkhira'],
+  'Barishal': ['Barguna', 'Barishal', 'Bhola', 'Jhalokati', 'Patuakhali', 'Pirojpur'],
+  'Sylhet': ['Habiganj', 'Moulvibazar', 'Sunamganj', 'Sylhet'],
+  'Rangpur': ['Dinajpur', 'Gaibandha', 'Kurigram', 'Lalmonirhat', 'Nilphamari', 'Panchagarh', 'Rangpur', 'Thakurgaon'],
+  'Mymensingh': ['Jamalpur', 'Mymensingh', 'Netrokona', 'Sherpur']
+};
 
 export default function AdminHubsPage() {
   const [hubs, setHubs] = useState<any[]>([]);
@@ -47,6 +62,14 @@ export default function AdminHubsPage() {
     fetchHubs();
   }, []);
 
+  // Update district when division changes
+  useEffect(() => {
+    const districtsForDiv = bdData[division] || [];
+    if (districtsForDiv.length > 0) {
+      setDistrict(districtsForDiv[0]);
+    }
+  }, [division]);
+
   const handleCreateHub = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -68,6 +91,8 @@ export default function AdminHubsPage() {
       setIsModalOpen(false);
       // Reset form
       setName(''); setUpazilaOrThana(''); setAddressLine('');
+      setDivision('Dhaka');
+      setDistrict('Dhaka');
       // Refresh list
       fetchHubs();
     } catch (err: any) {
@@ -86,12 +111,12 @@ export default function AdminHubsPage() {
             <Building2 className="text-primary" size={32} />
             Hub Management
           </h1>
-          <p className="text-base-content/70 mt-1">Manage regional sorting hubs and branches.</p>
+          <p className="text-muted-foreground mt-1 text-sm">Manage regional sorting hubs and branches.</p>
         </div>
         
-        <button className="btn btn-primary shadow-sm" onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} /> Add New Hub
-        </button>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus size={18} className="mr-2" /> Add New Hub
+        </Button>
       </div>
 
       {loading ? (
@@ -101,16 +126,16 @@ export default function AdminHubsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hubs.map((hub) => (
-            <div key={hub.id} className="card bg-base-100 shadow border border-base-200">
-              <div className="card-body">
-                <h2 className="card-title text-lg flex items-center justify-between">
+            <div key={hub.id} className="card bg-card shadow-sm border border-border">
+              <div className="card-body p-6">
+                <h2 className="card-title text-lg flex items-center justify-between font-bold">
                   {hub.name}
-                  <span className="badge badge-primary badge-outline text-xs">Active</span>
+                  <Badge variant="default" className="text-xs">Active</Badge>
                 </h2>
                 
-                <div className="mt-4 space-y-2 text-sm text-base-content/80">
+                <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                   <div className="flex gap-2 items-start">
-                    <MapPin size={16} className="text-base-content/50 mt-0.5 shrink-0" />
+                    <MapPin size={16} className="text-primary mt-0.5 shrink-0" />
                     <span>
                       {hub.addressLine}, {hub.upazilaOrThana}<br/>
                       {hub.district}, {hub.division}
@@ -120,8 +145,8 @@ export default function AdminHubsPage() {
                 
                 <div className="divider my-2"></div>
                 
-                <div className="flex justify-between items-center text-xs text-base-content/50">
-                  <span>ID: <span className="font-mono text-base-content/70">{hub.id.split('-')[0]}</span></span>
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                  <span>ID: <span className="font-mono font-medium">{hub.id.split('-')[0]}</span></span>
                   <span>Created: {format(new Date(hub.createdAt), 'MMM d, yyyy')}</span>
                 </div>
               </div>
@@ -129,11 +154,11 @@ export default function AdminHubsPage() {
           ))}
           
           {hubs.length === 0 && (
-            <div className="col-span-full py-12 text-center border-2 border-dashed border-base-300 rounded-xl">
-              <Building2 size={48} className="mx-auto text-base-content/30 mb-4" />
+            <div className="col-span-full py-16 text-center border-2 border-dashed border-border rounded-xl">
+              <Building2 size={48} className="mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-bold">No Hubs Found</h3>
-              <p className="text-base-content/60">Create your first sorting hub to get started.</p>
-              <button className="btn btn-outline btn-sm mt-4" onClick={() => setIsModalOpen(true)}>Add Hub</button>
+              <p className="text-muted-foreground mt-2">Create your first sorting hub to get started.</p>
+              <Button variant="outline" className="mt-4" onClick={() => setIsModalOpen(true)}>Add Hub</Button>
             </div>
           )}
         </div>
@@ -141,50 +166,63 @@ export default function AdminHubsPage() {
 
       {/* Create Hub Modal */}
       {isModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg border-b border-base-200 pb-3 mb-4">Create New Hub</h3>
-            
-            <form onSubmit={handleCreateHub} className="space-y-4">
-              <div className="form-control">
-                <label className="label"><span className="label-text font-medium">Hub Name</span></label>
-                <input type="text" className="input input-bordered w-full" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Uttara Main Hub" />
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-lg rounded-xl shadow-xl overflow-hidden border border-border">
+            <div className="p-6">
+              <h3 className="font-bold text-xl border-b border-border pb-3 mb-6">Create New Hub</h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label"><span className="label-text font-medium">Division</span></label>
-                  <select className="select select-bordered" value={division} onChange={e => setDivision(e.target.value)}>
-                    <option value="Dhaka">Dhaka</option>
-                    <option value="Chittagong">Chittagong</option>
-                    <option value="Sylhet">Sylhet</option>
-                  </select>
+              <form onSubmit={handleCreateHub} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Hub Name</label>
+                  <Input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Uttara Main Hub" />
                 </div>
-                <div className="form-control">
-                  <label className="label"><span className="label-text font-medium">District</span></label>
-                  <input type="text" className="input input-bordered" value={district} onChange={e => setDistrict(e.target.value)} required />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1.5 block">Division</label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
+                      value={division} 
+                      onChange={e => setDivision(e.target.value)}
+                    >
+                      {Object.keys(bdData).map(div => (
+                        <option key={div} value={div}>{div}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1.5 block">District</label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
+                      value={district} 
+                      onChange={e => setDistrict(e.target.value)}
+                    >
+                      {(bdData[division] || []).map(dist => (
+                        <option key={dist} value={dist}>{dist}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="form-control">
-                <label className="label"><span className="label-text font-medium">Upazila / Thana</span></label>
-                <input type="text" className="input input-bordered w-full" value={upazilaOrThana} onChange={e => setUpazilaOrThana(e.target.value)} required />
-              </div>
-              
-              <div className="form-control">
-                <label className="label"><span className="label-text font-medium">Detailed Address</span></label>
-                <input type="text" className="input input-bordered w-full" value={addressLine} onChange={e => setAddressLine(e.target.value)} required />
-              </div>
-              
-              <div className="modal-action">
-                <button type="button" className="btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={creating}>
-                  {creating ? <span className="loading loading-spinner"></span> : 'Create Hub'}
-                </button>
-              </div>
-            </form>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Upazila / Thana</label>
+                  <Input type="text" value={upazilaOrThana} onChange={e => setUpazilaOrThana(e.target.value)} required placeholder="e.g. Uttara" />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Detailed Address</label>
+                  <Input type="text" value={addressLine} onChange={e => setAddressLine(e.target.value)} required placeholder="e.g. House 12, Road 5, Sector 10" />
+                </div>
+                
+                <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-border">
+                  <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={creating}>
+                    {creating ? 'Creating...' : 'Create Hub'}
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
-          <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
         </div>
       )}
     </div>
