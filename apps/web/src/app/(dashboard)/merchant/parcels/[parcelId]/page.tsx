@@ -22,7 +22,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
-export default function MerchantParcelDetailsPage({ params }: { params: { parcelId: string } }) {
+import { use } from 'react';
+
+export default function MerchantParcelDetailsPage({ params }: { params: Promise<{ parcelId: string }> }) {
+  const unwrappedParams = use(params);
+  const parcelId = unwrappedParams.parcelId;
   const [parcel, setParcel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +40,7 @@ export default function MerchantParcelDetailsPage({ params }: { params: { parcel
         return;
       }
       try {
-        const response = await apiClient<any>(`parcels/${params.parcelId}`, {
+        const response = await apiClient<any>(`parcels/${parcelId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setParcel(response);
@@ -53,7 +57,7 @@ export default function MerchantParcelDetailsPage({ params }: { params: { parcel
       }
     };
     fetchParcel();
-  }, [params.parcelId, router]);
+  }, [parcelId, router]);
 
   if (loading) {
     return (

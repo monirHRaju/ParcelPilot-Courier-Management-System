@@ -216,7 +216,7 @@ export default function HomePage() {
               <div className="card-body gap-5">
                 <h3 className="font-bold text-xl text-center">Start shipping today</h3>
                 <p className="text-sm text-center text-base-content/60">Join 15,000+ merchants already using ParcelPilot</p>
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <div className="space-y-4">
                   <div className="form-control">
                     <input type="text" placeholder="Your business name" className="input input-bordered w-full" />
                   </div>
@@ -227,7 +227,7 @@ export default function HomePage() {
                     Create Free Account <ArrowRight size={16} />
                   </Link>
                   <p className="text-xs text-center text-base-content/40">No credit card required. Free to start.</p>
-                </form>
+                </div>
               </div>
             </div>
           </div>
