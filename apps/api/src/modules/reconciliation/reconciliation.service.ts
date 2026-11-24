@@ -12,7 +12,7 @@ export const reconciliationService = {
    */
   async createOrGetReconciliation(hubId: string) {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     let reconciliation = await prisma.hubReconciliation.findUnique({
       where: {

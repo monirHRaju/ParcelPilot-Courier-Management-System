@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Phone, Eye, EyeOff, Package, Truck, BarChart2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { safeJwtDecode } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const PERKS = [
@@ -35,8 +36,8 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
 
-      const payload = JSON.parse(atob(response.accessToken.split('.')[1]));
-      const role = payload.role;
+      const payload = safeJwtDecode(response.accessToken) || {};
+      const role = payload.role || response.role;
       const name = payload.phone || phone;
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', name);

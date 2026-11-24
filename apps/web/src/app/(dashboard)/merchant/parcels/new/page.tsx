@@ -59,8 +59,6 @@ export default function CreateParcelPage() {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
           body: JSON.stringify(payload)
-        }).catch(err => {
-          console.warn("API Error (ignored for demo fallback):", err);
         });
       }
 

@@ -190,7 +190,10 @@ export const parcelService = {
     const rider = await prisma.rider.findUnique({ where: { userId: riderUserId } });
     if (!rider) throw AppError.forbidden('Rider profile not found', 'RIDER_NOT_FOUND');
 
-    const parcel = await prisma.parcel.findUnique({ where: { id: parcelId } });
+    const parcel = await prisma.parcel.findUnique({ 
+      where: { id: parcelId },
+      include: { merchant: true }
+    });
     if (!parcel) throw AppError.notFound('Parcel not found', 'PARCEL_NOT_FOUND');
 
     if (parcel.riderId !== rider.id) {
@@ -204,10 +207,6 @@ export const parcelService = {
     const { ParcelStatus } = await import('@prisma/client');
     const newStatus = ParcelStatus.DELIVERED;
 
-    // We can call transitionParcelStatus here, but it doesn't accept proofOfDeliveryUrl
-    // Let's just do it directly or use it and then update the URL.
-    // We will do a transaction directly here since it's a specialized operation
-    
     const result = await prisma.$transaction([
       prisma.parcel.update({
         where: { id: parcelId },
@@ -226,7 +225,25 @@ export const parcelService = {
       }),
     ]);
 
-    // Same notification logic as in transitionParcelStatus
+    // Financial ledger updates for delivery
+    try {
+      const { walletService } = await import('../wallet/wallet.service.js');
+      const { TxType } = await import('@prisma/client');
+
+      // Debit delivery fee for delivery service rendered
+      await walletService.debitWallet(
+        parcel.merchantId,
+        TxType.DEBIT_ADJUSTMENT,
+        parcel.totalFee,
+        parcel.id,
+        `Delivery fee for parcel ${parcel.id}`,
+      );
+    } catch (e) {
+      const { logger } = await import('../../lib/logger.js');
+      logger.error({ error: e, parcelId }, 'Failed to debit delivery fee on deliverParcel');
+    }
+
+    // Notification / Socket / SMS logic
     try {
       const { smsQueue, notificationQueue } = await import('../../lib/queue/queue.js');
       const smsMessageFor = (s: string) => `Your parcel has been delivered. Thank you for using ParcelPilot.`;
@@ -238,7 +255,7 @@ export const parcelService = {
       });
       
       await notificationQueue.add('status-notification', { 
-        userId: parcel.merchantId, 
+        userId: parcel.merchant.userId, 
         type: 'PARCEL_STATUS_CHANGE', 
         message: `Parcel ${parcel.id} status changed to ${newStatus}`, 
         parcelId: parcel.id 
@@ -252,7 +269,7 @@ export const parcelService = {
         historyId: result[1].id,
       };
       
-      io.to(`user:${parcel.merchantId}`).emit('status:update', payload);
+      io.to(`user:${parcel.merchant.userId}`).emit('status:update', payload);
       io.of('/tracking').to(`parcel:${parcel.id}`).emit('status:update', payload);
     } catch (e) {
       const { logger } = await import('../../lib/logger.js');
@@ -363,10 +380,10 @@ export const parcelService = {
       const { TxType } = await import('@prisma/client');
 
       if (newStatus === ParcelStatus.DELIVERED) {
-        // Credit the merchant the full delivery fee they were charged
-        await walletService.creditWallet(
+        // Debit the delivery fee from merchant for delivery service rendered
+        await walletService.debitWallet(
           parcel.merchantId,
-          TxType.CREDIT_DELIVERY_FEE,
+          TxType.DEBIT_ADJUSTMENT,
           parcel.totalFee,
           parcel.id,
           `Delivery fee for parcel ${parcel.id}`,

@@ -16,7 +16,7 @@ export default function MerchantWalletPage() {
   
   // Ensure token is passed
   const getAuthHeaders = (): Record<string, string> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? (localStorage.getItem('accessToken') || localStorage.getItem('token')) : null;
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 

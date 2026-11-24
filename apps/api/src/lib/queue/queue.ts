@@ -7,7 +7,8 @@ import { logger } from '../logger.js';
 // separate from the connections used by the Socket.IO Redis adapter.
 export const queueRedis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: null, // Required by BullMQ
-  lazyConnect: true,
+  lazyConnect: env.NODE_ENV === 'test',
+  retryStrategy: env.NODE_ENV === 'test' ? () => null : undefined,
 });
 
 queueRedis.on('connect', () => {

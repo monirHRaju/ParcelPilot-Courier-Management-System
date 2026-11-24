@@ -2,14 +2,16 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { z } from 'zod';
 
-// Load .env from current directory, apps/api/.env, or root .env
+// Load .env from current directory, parent directories, apps/api/.env, or root .env
 dotenv.config();
-dotenv.config({ path: path.resolve(process.cwd(), 'apps/api/.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), 'apps/api/.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '..', '..', '.env') });
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(4000),
+  PORT: z.coerce.number().default(4008),
   DATABASE_URL: z
     .string()
     .min(1, 'DATABASE_URL is required')
@@ -30,7 +32,15 @@ export const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function validateEnv(rawEnv: Record<string, unknown> = process.env): Env {
-  const parsed = envSchema.safeParse(rawEnv);
+  const envWithDefaults = { ...rawEnv };
+  if (envWithDefaults.NODE_ENV === 'test') {
+    envWithDefaults.DATABASE_URL = envWithDefaults.DATABASE_URL || 'postgresql://test:test@127.0.0.1:5432/test_db';
+    envWithDefaults.REDIS_URL = envWithDefaults.REDIS_URL || 'redis://127.0.0.1:6379';
+    envWithDefaults.JWT_ACCESS_SECRET = envWithDefaults.JWT_ACCESS_SECRET || 'test_jwt_access_secret_super_long_32_chars';
+    envWithDefaults.JWT_REFRESH_SECRET = envWithDefaults.JWT_REFRESH_SECRET || 'test_jwt_refresh_secret_super_long_32_chars';
+  }
+
+  const parsed = envSchema.safeParse(envWithDefaults);
 
   if (!parsed.success) {
     console.error('\n❌ Invalid environment configuration:');

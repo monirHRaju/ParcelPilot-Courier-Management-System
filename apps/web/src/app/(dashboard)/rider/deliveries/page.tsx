@@ -75,7 +75,7 @@ export default function RiderDeliveriesPage() {
     formData.append('photo', file);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:4008');
       const response = await fetch(`${baseUrl}/parcels/${selectedParcelId}/deliver`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -85,17 +85,12 @@ export default function RiderDeliveriesPage() {
       if (response.ok) {
         toast.success(`Parcel ${selectedParcelId} delivered successfully!`);
         await fetchDeliveries();
-      } else if (response.status === 400) {
-        // Parcel may not be in OUT_FOR_DELIVERY status — show friendly error
-        const body = await response.json().catch(() => ({}));
-        toast.error(body?.message || 'Parcel cannot be delivered in its current status.');
       } else {
-        throw new Error('Failed to mark as delivered');
+        const body = await response.json().catch(() => ({}));
+        toast.error(body?.error?.message || body?.message || 'Failed to mark parcel as delivered.');
       }
     } catch (err: any) {
-      // For demo: optimistically update local state
-      toast.success(`Parcel ${selectedParcelId} marked as delivered!`);
-      setDeliveries(prev => prev.map(d => d.id === selectedParcelId ? { ...d, status: 'DELIVERED' } : d));
+      toast.error(err?.message || 'Network error while marking parcel as delivered.');
     } finally {
       setLoadingId(null);
       setSelectedParcelId(null);

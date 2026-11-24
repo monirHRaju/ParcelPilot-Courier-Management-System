@@ -17,7 +17,7 @@ export class DashboardService {
     const codCollectedResult = await prisma.parcel.aggregate({
       where: { 
         status: 'DELIVERED',
-        isCodCollected: false,
+        isCodCollected: true,
         paymentType: 'COD'
       },
       _sum: { codAmount: true },

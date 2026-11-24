@@ -93,7 +93,7 @@ export default function RiderDashboardPage() {
     formData.append('photo', file);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:4008');
       const response = await fetch(`${baseUrl}/parcels/${selectedParcelId}/deliver`, {
         method: 'POST',
         headers: {
@@ -103,22 +103,15 @@ export default function RiderDashboardPage() {
       });
 
       if (!response.ok) {
-        // If API fails, show mock success for demo purposes if 404/not implemented
-        if (response.status === 404) {
-          toast.success(`Mock: Parcel ${selectedParcelId} marked as delivered!`);
-          setTimeout(() => fetchStats(), 1000);
-          return;
-        }
-        throw new Error('Failed to mark as delivered');
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error?.message || body?.message || 'Failed to mark as delivered');
       }
 
       toast.success('Parcel successfully delivered!');
       await fetchStats();
     } catch (err: any) {
       console.error(err);
-      // Fallback for demo
-      toast.success(`Mock: Parcel ${selectedParcelId} marked as delivered!`);
-      setTimeout(() => fetchStats(), 1000);
+      toast.error(err?.message || 'Failed to mark parcel as delivered');
     } finally {
       setIsSubmitting(null);
       setSelectedParcelId(null);

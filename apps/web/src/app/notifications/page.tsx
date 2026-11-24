@@ -28,7 +28,7 @@ interface UnreadCountResponse {
   data: { count: number };
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:4008';
 
 function timeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -64,17 +64,18 @@ export default function NotificationsPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await apiClient<NotificationsResponse['data']>(
+      const res = await apiClient<NotificationsResponse>(
         `notifications/mine?page=${pageNum}&limit=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      const payload = res.data || { notifications: [], total: 0, totalPages: 1 };
       if (pageNum === 1) {
-        setNotifications(data.notifications);
+        setNotifications(payload.notifications || []);
       } else {
-        setNotifications((prev) => [...prev, ...data.notifications]);
+        setNotifications((prev) => [...prev, ...(payload.notifications || [])]);
       }
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      setTotal(payload.total || 0);
+      setTotalPages(payload.totalPages || 1);
       setPage(pageNum);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load notifications');
@@ -86,11 +87,11 @@ export default function NotificationsPage() {
   const fetchUnreadCount = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await apiClient<UnreadCountResponse['data']>(
+      const res = await apiClient<UnreadCountResponse>(
         'notifications/mine/unread-count',
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setUnreadCount(data.count);
+      setUnreadCount(res.data?.count ?? 0);
     } catch {
       // non-fatal
     }

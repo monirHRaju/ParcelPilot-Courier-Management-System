@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
+import { getSocketUrl } from '@/lib/socket';
 import { io, Socket } from 'socket.io-client';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -24,7 +23,7 @@ export function NotificationBell() {
       .catch(console.error);
 
     // 2. Connect socket to listen for real-time notifications
-    const socket: Socket = io(API_BASE, {
+    const socket: Socket = io(getSocketUrl(), {
       auth: { token }
     });
 

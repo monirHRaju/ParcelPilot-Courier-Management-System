@@ -13,6 +13,10 @@ const alg = 'HS256';
 
 export class AuthService {
   static async register(phone: string, passwordPlain: string, role: Role) {
+    if ((role === Role.SUPER_ADMIN || role === Role.HUB_MANAGER) && env.NODE_ENV === 'production') {
+      throw AppError.forbidden('Administrative roles cannot be registered via public registration', 'FORBIDDEN_ROLE');
+    }
+
     const existing = await prisma.user.findUnique({ where: { phone } });
     if (existing) {
       throw AppError.badRequest('Phone number already in use', 'USER_ALREADY_EXISTS');
@@ -22,6 +26,33 @@ export class AuthService {
     const user = await prisma.user.create({
       data: { phone, passwordHash, role },
     });
+
+    if (role === Role.MERCHANT) {
+      const merchant = await prisma.merchant.create({
+        data: {
+          userId: user.id,
+          businessName: `Store ${phone.slice(-4)}`,
+          businessAddress: 'Dhaka, Bangladesh',
+          contactPersonName: 'Merchant Owner',
+        },
+      });
+      await prisma.merchantWallet.create({
+        data: {
+          merchantId: merchant.id,
+          balancePaisa: 0,
+        },
+      });
+    } else if (role === Role.RIDER) {
+      await prisma.rider.create({
+        data: {
+          userId: user.id,
+          vehicleType: 'MOTORCYCLE',
+          nidNumber: 'PENDING',
+          coverageZone: 'All',
+          isApproved: false,
+        },
+      });
+    }
 
     return this.generateTokens(user.id, user.role);
   }

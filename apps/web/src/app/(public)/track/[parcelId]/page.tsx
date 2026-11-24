@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation';
 import TrackerClient from './TrackerClient';
 
-// Ensure NEXT_PUBLIC_API_URL is available
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Use internal API URL if running server-side on VPS, or fallback to public/localhost
+const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4008';
 
 async function getParcelSnapshot(parcelId: string) {
   try {
     const res = await fetch(`${API_URL}/public/parcels/${parcelId}/track`, {
-      // Fast first paint: we can cache if needed, but for tracking usually no-store or short revalidate is better
       cache: 'no-store',
     });
     

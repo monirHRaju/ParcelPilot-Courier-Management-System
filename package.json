@@ -10,8 +10,13 @@
     "dev": "concurrently -k -p \"[{name}]\" -n \"API,WEB\" -c \"cyan.bold,magenta.bold\" \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "start:api": "npm run start --workspace=apps/api",
+    "start:web": "npm run start --workspace=apps/web",
+    "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
     "postinstall": "cd apps/api && npx prisma generate"
   },
   "devDependencies": {

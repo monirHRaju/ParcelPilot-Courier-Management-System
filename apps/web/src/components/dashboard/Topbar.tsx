@@ -44,21 +44,23 @@ export function Topbar() {
   };
 
   const handleCheckBalance = async () => {
+    if (userRole !== 'MERCHANT') return;
     const token = localStorage.getItem('accessToken');
+    if (!token) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const res = await fetch(`${baseUrl}/merchant/wallet`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:4008');
+      const res = await fetch(`${baseUrl}/merchants/me/wallet`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const data = await res.json();
-        setBalance(data.balance ?? 0);
+        const json = await res.json();
+        const paisa = json.data?.balancePaisa;
+        setBalance(paisa !== undefined ? Math.round(paisa / 100) : (json.balance ?? 0));
       } else {
-        // Fallback simulated balance for demo
-        setBalance(15240);
+        setBalance(0);
       }
     } catch {
-      setBalance(15240);
+      setBalance(0);
     }
     setTimeout(() => setBalance(null), 3000);
   };

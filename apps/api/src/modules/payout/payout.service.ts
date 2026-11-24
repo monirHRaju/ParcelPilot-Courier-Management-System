@@ -149,9 +149,24 @@ export const payoutService = {
       updateData.processedAt = new Date();
     }
 
-    const updatedPayout = await prisma.payoutRequest.update({
-      where: { id },
-      data: updateData,
+    const updatedPayout = await prisma.$transaction(async (tx) => {
+      const updated = await tx.payoutRequest.update({
+        where: { id },
+        data: updateData,
+      });
+
+      if (data.status === PayoutStatus.FAILED && payout.status !== PayoutStatus.FAILED) {
+        await walletService.creditWalletTx(
+          tx,
+          payout.merchantId,
+          TxType.CREDIT_ADJUSTMENT,
+          payout.amountPaisa,
+          null,
+          `Refund for rejected payout #${payout.id}: ${data.failureReason || 'Payout failed or rejected'}`,
+        );
+      }
+
+      return updated;
     });
 
     logger.info(`[ADMIN PAYOUT] Updated payout ${id} to ${data.status}`);

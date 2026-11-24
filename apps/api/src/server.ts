@@ -7,6 +7,13 @@ import { queueRedis } from './lib/queue/queue.js';
 import { initSocket } from './lib/socket.js';
 import { startWorkers, closeWorkers } from './lib/queue/workers/index.js';
 
+if (redis.status === 'wait') {
+  await redis.connect().catch((err) => logger.error({ err }, 'Redis initial connect error'));
+}
+if (queueRedis.status === 'wait') {
+  await queueRedis.connect().catch((err) => logger.error({ err }, 'Queue Redis initial connect error'));
+}
+
 const server = app.listen(env.PORT, () => {
   logger.info(`🚀 [API Server] Running on http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
 });

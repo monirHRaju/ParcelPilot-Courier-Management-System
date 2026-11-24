@@ -45,7 +45,7 @@ export default function AdminPayoutsPage() {
       await apiClient(`admin/payouts/${id}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status, referenceId: reference })
+        body: JSON.stringify({ status, reference })
       });
       
       fetchPayouts();

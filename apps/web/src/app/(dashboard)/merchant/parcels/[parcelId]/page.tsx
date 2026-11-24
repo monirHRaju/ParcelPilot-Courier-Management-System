@@ -40,10 +40,10 @@ export default function MerchantParcelDetailsPage({ params }: { params: Promise<
         return;
       }
       try {
-        const response = await apiClient<any>(`parcels/${parcelId}`, {
+        const response = await apiClient<{ message: string; parcel: any }>(`parcels/${parcelId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setParcel(response);
+        setParcel(response.parcel || response);
       } catch (err: any) {
         console.error(err);
         if (err.status === 401) {

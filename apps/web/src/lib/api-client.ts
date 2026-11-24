@@ -2,7 +2,11 @@ const getApiBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  return 'http://localhost:4000';
+  if (typeof window !== 'undefined') {
+    // In browser, default to relative '/api' which works seamlessly with Nginx reverse proxy
+    return '/api';
+  }
+  return process.env.INTERNAL_API_URL || 'http://127.0.0.1:4008';
 };
 
 export interface RequestOptions extends RequestInit {
@@ -43,9 +47,21 @@ export async function apiClient<T>(
 
   const { headers, ...restOptions } = options;
 
+  const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Automatically attach auth token from localStorage if available in browser
+  if (typeof window !== 'undefined' && !(headers as Record<string, string>)?.Authorization) {
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   const response = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
+      ...defaultHeaders,
       ...headers,
     },
     ...restOptions,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Phone, Eye, EyeOff, Building2, Bike, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { safeJwtDecode } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const ROLE_OPTIONS = [
@@ -55,8 +56,8 @@ export default function RegisterPage() {
       localStorage.setItem('accessToken', loginResponse.accessToken);
       localStorage.setItem('refreshToken', loginResponse.refreshToken);
 
-      const payload = JSON.parse(atob(loginResponse.accessToken.split('.')[1]));
-      const userRole = payload.role;
+      const payload = safeJwtDecode(loginResponse.accessToken) || {};
+      const userRole = payload.role || role;
       localStorage.setItem('userRole', userRole);
       localStorage.setItem('userName', phone);
 

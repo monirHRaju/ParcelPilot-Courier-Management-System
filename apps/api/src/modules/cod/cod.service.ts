@@ -24,10 +24,10 @@ export const codService = {
       throw AppError.badRequest('This is not a COD parcel', 'NOT_COD_PARCEL');
     }
 
-    // Guard: must be OUT_FOR_DELIVERY
-    if (parcel.status !== 'OUT_FOR_DELIVERY') {
+    // Guard: must be OUT_FOR_DELIVERY or DELIVERED
+    if (parcel.status !== 'OUT_FOR_DELIVERY' && parcel.status !== 'DELIVERED') {
       throw AppError.badRequest(
-        `Cannot collect COD — parcel status is ${parcel.status}, expected OUT_FOR_DELIVERY`,
+        `Cannot collect COD — parcel status is ${parcel.status}, expected OUT_FOR_DELIVERY or DELIVERED`,
         'INVALID_PARCEL_STATUS',
       );
     }

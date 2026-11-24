@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import { format } from 'date-fns';
+import { getSocketUrl } from '@/lib/socket';
 
 type StatusHistory = {
   status: string;
@@ -56,9 +57,8 @@ export default function TrackerClient({
   });
 
   useEffect(() => {
-    // API URL usually comes from env
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const socket = io(`${socketUrl}/tracking`);
+    const socketBase = getSocketUrl();
+    const socket = io(`${socketBase}/tracking`);
 
     socket.on('connect', () => {
       socket.emit('join_room', `parcel:${parcelId}`);
